@@ -12,19 +12,6 @@ const sequelize = new Sequelize(env.DB_NAME, env.DB_USERNAME, env.DB_PASSWORD, {
   logging: false,
 });
 
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log("Connection has been established successfully.");
-  })
-  .catch((err) => {
-    console.error("Unable to connect to the database:", err);
-  });
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
 const User = sequelize.define(
   "User",
   {
@@ -231,3 +218,31 @@ EventAttachment.belongsTo(Event, {
   onDelete: "RESTRICT",
   onUpdate: "CASCADE",
 });
+
+// Sync table model
+async function syncDatabase() {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log("Database synced successfully");
+  } catch (err) {
+    console.error("Error syncing database:", err);
+  }
+}
+
+// Main server
+async function startServer() {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connection has been established successfully.");
+
+    // sync database
+    await syncDatabase();
+    app.listen(port, () => {
+      console.log(`Server running on htpp://localhost:${port}`);
+    });
+  } catch (err) {
+    console.log("Unable to connect:", err);
+  }
+}
+
+startServer();
