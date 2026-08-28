@@ -1,0 +1,48 @@
+  <!-- ==================== FOOTER (Full in home.ejs) ==================== -->
+  <footer class="bg-white border-t border-gray-200 mt-auto py-8 text-sm text-gray-500">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-xs">
+          E
+        </div>
+        <span class="font-bold text-gray-800">EventHub &copy; 2026</span>
+      </div>
+      <p class="text-xs text-gray-400">The premier event discovery platform for communities and creators.</p>
+    </div>
+  </footer>
+  <!-- ==================== END FOOTER ==================== -->
+
+  <!-- Section 5: Client-Side Interactive Active State Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Interactive Toggle for Category Pills
+      const catPills = document.querySelectorAll('.category-pill');
+      catPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          catPills.forEach(p => {
+            p.classList.remove('bg-primary', 'text-white', 'shadow-primary/20');
+            p.classList.add('bg-accent/60', 'text-gray-700');
+          });
+          pill.classList.remove('bg-accent/60', 'text-gray-700');
+          pill.classList.add('bg-primary', 'text-white', 'shadow-primary/20');
+        });
+      });
+
+      // Interactive Toggle for City Pills
+      const cityPills = document.querySelectorAll('.city-pill');
+      cityPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          cityPills.forEach(p => {
+            p.classList.remove('bg-primary', 'text-white', 'shadow-primary/20');
+            p.classList.add('bg-accent/60', 'text-gray-700');
+          });
+          pill.classList.remove('bg-accent/60', 'text-gray-700');
+          pill.classList.add('bg-primary', 'text-white', 'shadow-primary/20');
+        });
+      });
+    });
+  </script>
+
+  </body>
+
+  </html>

@@ -1,0 +1,247 @@
+<%- include('../partials/header'); %>
+<!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+
+  <%
+      // Date formatting helper function
+      function formatDate(dateStr) {
+        if (!dateStr) return '12 Sep 2026';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return String(dateStr);
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        return d.toLocaleDateString('en-US', options);
+      }
+
+      // Single dummy sample for Latest Events fallback
+      const fallbackLatestEvents = [
+        {
+          id: 1,
+          title: "Nusantara Music Festival 2026",
+          Category: { name: "Music" },
+          event_date: "2026-09-15",
+          venue: "Gelora Bung Karno Main Stadium",
+          city: "Jakarta",
+          image_path: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
+        }
+      ];
+
+      // Single dummy sample for Upcoming Events fallback
+      const fallbackUpcomingEvents = [
+        {
+          id: 2,
+          title: "AI & Future Industry Seminar",
+          Category: { name: "Seminar" },
+          event_date: "2026-09-20",
+          venue: "Grand Ballroom Hotel Indonesia",
+          city: "Jakarta",
+          image_path: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"
+        }
+      ];
+
+      const displayLatest = (typeof latestEvents !== 'undefined' && latestEvents && latestEvents.length > 0) ? latestEvents : fallbackLatestEvents;
+      const displayUpcoming = (typeof upcomingEvents !== 'undefined' && upcomingEvents && upcomingEvents.length > 0) ? upcomingEvents : fallbackUpcomingEvents;
+      const categoryList = ['All Categories', 'Music', 'Seminar', 'Sports', 'Exhibition', 'Community', 'Others'];
+      const cityList = ['All Cities', 'Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Bali'];
+    %>
+
+  <!-- 4.1 SEARCH & FILTER BAR SECTION -->
+  <section class="bg-white rounded-3xl p-5 sm:p-7 shadow-lg shadow-gray-200/50 border border-accent/40 mb-10">
+
+    <!-- 1. Search Form -->
+    <form action="#" method="GET" onsubmit="event.preventDefault();" class="mb-6">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-grow">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+            <!-- Search Icon SVG -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input type="text" name="search" placeholder="Search events..." class="w-full pl-11 pr-4 py-3.5 bg-bg-base/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white text-gray-800 placeholder-gray-400 transition-all text-base" />
+        </div>
+        <button type="submit" class="bg-primary hover:bg-secondary text-white font-semibold px-7 py-3.5 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-primary/20 shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span>Search</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- 2 & 3. Filter by Category & City (Pill / Button Group) -->
+    <div class="space-y-4 pt-2 border-t border-gray-100">
+
+      <!-- Category Filter -->
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          Category
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="category-filter-group">
+          <% categoryList.forEach(function(catName, index) { %>
+          <button type="button" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent <%= index === 0 ? 'bg-primary text-white shadow-primary/20' : 'bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white' %>" data-category="<%= catName %>">
+            <%= catName %>
+          </button>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- City Filter -->
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          City / Location
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="city-filter-group">
+          <% cityList.forEach(function(cityName, index) { %>
+          <button type="button" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent <%= index === 0 ? 'bg-primary text-white shadow-primary/20' : 'bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white' %>" data-city="<%= cityName %>">
+            <%= cityName %>
+          </button>
+          <% }); %>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- 4.2 SECTION: LATEST EVENTS -->
+  <section class="mb-14">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+          <span class="w-3 h-7 bg-primary rounded-full inline-block"></span>
+          Latest Events
+        </h2>
+        <p class="text-gray-500 text-sm mt-1">Discover the freshest and newly published events</p>
+      </div>
+    </div>
+
+    <!-- Responsive Grid (1 Col Mobile → 2 Col Tablet → 3 Col Desktop) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      <% displayLatest.forEach(function(event) { %>
+      <!-- 4.4 Component: Event Card -->
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
+
+        <!-- Thumbnail Image (16:9 ratio) -->
+        <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+          <img src="<%= event.image_path || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80' %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <!-- Category Badge (Accent background #C8DFDB) -->
+          <div class="absolute top-3 left-3">
+            <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+              <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Card Content Body -->
+        <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
+          <div class="space-y-2">
+            <!-- Event Title -->
+            <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
+              <%= event.title %>
+            </h3>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-gray-100 text-sm">
+            <!-- Event Date -->
+            <div class="flex items-center text-gray-600 gap-2 font-medium">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span><%= formatDate(event.event_date) %></span>
+            </div>
+
+            <!-- Venue & City -->
+            <div class="flex items-center text-gray-500 gap-2">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="truncate">
+                <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- 4.3 SECTION: UPCOMING EVENTS -->
+  <section class="mb-14">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+          <span class="w-3 h-7 bg-secondary rounded-full inline-block"></span>
+          Upcoming Events
+        </h2>
+        <p class="text-gray-500 text-sm mt-1">Don't miss upcoming agendas happening soon</p>
+      </div>
+    </div>
+
+    <!-- Responsive Grid (1 Col Mobile → 2 Col Tablet → 3 Col Desktop) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      <% displayUpcoming.forEach(function(event) { %>
+      <!-- 4.4 Component: Event Card -->
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
+
+        <!-- Thumbnail Image (16:9 ratio) -->
+        <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+          <img src="<%= event.image_path || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80' %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <!-- Category Badge (Accent background #C8DFDB) -->
+          <div class="absolute top-3 left-3">
+            <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+              <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Card Content Body -->
+        <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
+          <div class="space-y-2">
+            <!-- Event Title -->
+            <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
+              <%= event.title %>
+            </h3>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-gray-100 text-sm">
+            <!-- Event Date -->
+            <div class="flex items-center text-gray-600 gap-2 font-medium">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span><%= formatDate(event.event_date) %></span>
+            </div>
+
+            <!-- Venue & City -->
+            <div class="flex items-center text-gray-500 gap-2">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="truncate">
+                <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <% }); %>
+    </div>
+  </section>
+
+</main>
+<!-- ==================== END MAIN CONTENT ==================== -->
+<%- include('../partials/footer'); %>
