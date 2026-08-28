@@ -1,10 +1,28 @@
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
-const { Sequelize, DataTypes } = require("sequelize");
-require("dotenv").config();
+const { Sequelize, DataTypes, Op } = require("sequelize");
+const session = require("express-session");
+const path = require("path");
 const env = process.env;
 const app = express();
 const port = env.PORT;
+
+// MIDDLEWARE
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static("public"));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+
+// set view engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
 const sequelize = new Sequelize(env.DB_NAME, env.DB_USERNAME, env.DB_PASSWORD, {
   host: env.DB_HOST || "localhost",
@@ -219,6 +237,48 @@ EventAttachment.belongsTo(Event, {
   onUpdate: "CASCADE",
 });
 
+// CONTROLLERS
+app.get("/", async (req, res) => {
+  try {
+    const categories = await Category.findAll();
+    let cities = [];
+    try {
+      const citiesData = await Event.findAll({
+        attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"]],
+        where: { is_published: true },
+        order: [["city", "ASC"]],
+      });
+      cities = citiesData.map((c) => c.city).filter((city) => city);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"];
+    }
+    const latestEvents = await Event.findAll({
+      where: { is_published: true },
+      include: [Category, User],
+      order: [["created_at", "DESC"]],
+      limit: 6,
+    });
+    const upcomingEvents = await Event.findAll({
+      where: { is_published: true, event_date: { [Op.gte]: new Date() } },
+      include: [Category, User],
+      order: [["event_date", "ASC"]],
+      limit: 6,
+    });
+    res.render("home", {
+      user: req.session.user,
+      categories,
+      cities,
+      latestEvents,
+      upcomingEvents,
+    });
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END CONTROLLERS
+
 // Sync table model
 async function syncDatabase() {
   try {
@@ -238,7 +298,7 @@ async function startServer() {
     // sync database
     await syncDatabase();
     app.listen(port, () => {
-      console.log(`Server running on htpp://localhost:${port}`);
+      console.log(`Server running on http://localhost:${port}`);
     });
   } catch (err) {
     console.log("Unable to connect:", err);
