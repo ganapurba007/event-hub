@@ -1,48 +1,7 @@
 <%- include('../partials/header'); %>
+
 <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
 <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-
-  <%
-      // Date formatting helper function
-      function formatDate(dateStr) {
-        if (!dateStr) return '12 Sep 2026';
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return String(dateStr);
-        const options = { day: 'numeric', month: 'short', year: 'numeric' };
-        return d.toLocaleDateString('en-US', options);
-      }
-
-      // Single dummy sample for Latest Events fallback
-      const fallbackLatestEvents = [
-        {
-          id: 1,
-          title: "Nusantara Music Festival 2026",
-          Category: { name: "Music" },
-          event_date: "2026-09-15",
-          venue: "Gelora Bung Karno Main Stadium",
-          city: "Jakarta",
-          image_path: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
-        }
-      ];
-
-      // Single dummy sample for Upcoming Events fallback
-      const fallbackUpcomingEvents = [
-        {
-          id: 2,
-          title: "AI & Future Industry Seminar",
-          Category: { name: "Seminar" },
-          event_date: "2026-09-20",
-          venue: "Grand Ballroom Hotel Indonesia",
-          city: "Jakarta",
-          image_path: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"
-        }
-      ];
-
-      const displayLatest = (typeof latestEvents !== 'undefined' && latestEvents && latestEvents.length > 0) ? latestEvents : fallbackLatestEvents;
-      const displayUpcoming = (typeof upcomingEvents !== 'undefined' && upcomingEvents && upcomingEvents.length > 0) ? upcomingEvents : fallbackUpcomingEvents;
-      const categoryList = ['All Categories', 'Music', 'Seminar', 'Sports', 'Exhibition', 'Community', 'Others'];
-      const cityList = ['All Cities', 'Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Bali'];
-    %>
 
   <!-- 4.1 SEARCH & FILTER BAR SECTION -->
   <section class="bg-white rounded-3xl p-5 sm:p-7 shadow-lg shadow-gray-200/50 border border-accent/40 mb-10">
@@ -80,11 +39,12 @@
           Category
         </div>
         <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="category-filter-group">
-          <% categoryList.forEach(function(catName, index) { %>
-          <button type="button" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent <%= index === 0 ? 'bg-primary text-white shadow-primary/20' : 'bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white' %>" data-category="<%= catName %>">
-            <%= catName %>
-          </button>
-          <% }); %>
+          <button type="button" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-category="All Categories">All Categories</button>
+          <% categories.forEach(category => { %>
+          <a href="events?category=<%= category.id %>" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white">
+            <%= category.name %>
+          </a>
+          <% }) %>
         </div>
       </div>
 
@@ -98,11 +58,8 @@
           City / Location
         </div>
         <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="city-filter-group">
-          <% cityList.forEach(function(cityName, index) { %>
-          <button type="button" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent <%= index === 0 ? 'bg-primary text-white shadow-primary/20' : 'bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white' %>" data-city="<%= cityName %>">
-            <%= cityName %>
-          </button>
-          <% }); %>
+          <button type="button" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-city="All Cities">All Cities</button>
+          <button type="button" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white" data-city="Jakarta">Jakarta</button>
         </div>
       </div>
 
@@ -124,17 +81,17 @@
 
     <!-- Responsive Grid (1 Col Mobile → 2 Col Tablet → 3 Col Desktop) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-      <% displayLatest.forEach(function(event) { %>
-      <!-- 4.4 Component: Event Card -->
+
+      <!-- 4.4 Component: Event Card (Hardcoded HTML Sample) -->
       <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
 
         <!-- Thumbnail Image (16:9 ratio) -->
         <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
-          <img src="<%= event.image_path || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80' %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80" alt="Nusantara Music Festival 2026" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           <!-- Category Badge (Accent background #C8DFDB) -->
           <div class="absolute top-3 left-3">
             <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
-              <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+              Music
             </span>
           </div>
         </div>
@@ -144,7 +101,7 @@
           <div class="space-y-2">
             <!-- Event Title -->
             <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
-              <%= event.title %>
+              Nusantara Music Festival 2026
             </h3>
           </div>
 
@@ -154,7 +111,7 @@
               <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span><%= formatDate(event.event_date) %></span>
+              <span>15 Sep 2026</span>
             </div>
 
             <!-- Venue & City -->
@@ -164,15 +121,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span class="truncate">
-                <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+                Gelora Bung Karno Main Stadium, <strong class="font-semibold text-gray-700">Jakarta</strong>
               </span>
             </div>
           </div>
-
         </div>
 
       </div>
-      <% }); %>
+
     </div>
   </section>
 
@@ -190,17 +146,17 @@
 
     <!-- Responsive Grid (1 Col Mobile → 2 Col Tablet → 3 Col Desktop) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-      <% displayUpcoming.forEach(function(event) { %>
-      <!-- 4.4 Component: Event Card -->
+
+      <!-- 4.4 Component: Event Card (Hardcoded HTML Sample) -->
       <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
 
         <!-- Thumbnail Image (16:9 ratio) -->
         <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
-          <img src="<%= event.image_path || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80' %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80" alt="AI & Future Industry Seminar" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           <!-- Category Badge (Accent background #C8DFDB) -->
           <div class="absolute top-3 left-3">
             <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
-              <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+              Seminar
             </span>
           </div>
         </div>
@@ -210,7 +166,7 @@
           <div class="space-y-2">
             <!-- Event Title -->
             <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
-              <%= event.title %>
+              AI & Future Industry Seminar
             </h3>
           </div>
 
@@ -220,7 +176,7 @@
               <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span><%= formatDate(event.event_date) %></span>
+              <span>20 Sep 2026</span>
             </div>
 
             <!-- Venue & City -->
@@ -230,18 +186,18 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span class="truncate">
-                <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+                Grand Ballroom Hotel Indonesia, <strong class="font-semibold text-gray-700">Jakarta</strong>
               </span>
             </div>
           </div>
-
         </div>
 
       </div>
-      <% }); %>
+
     </div>
   </section>
 
 </main>
 <!-- ==================== END MAIN CONTENT ==================== -->
+
 <%- include('../partials/footer'); %>
