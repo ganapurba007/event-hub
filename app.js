@@ -78,6 +78,7 @@ const Event = sequelize.define(
     max_attendees: { type: DataTypes.INTEGER, allowNull: false },
     price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
     available_tickets: { type: DataTypes.INTEGER, allowNull: false },
+    city: { type: DataTypes.STRING(100), allowNull: false },
     is_published: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -243,12 +244,20 @@ app.get("/", async (req, res) => {
     const categories = await Category.findAll();
     let cities = [];
     try {
-      const citiesData = await Event.findAll({
+      let citiesData = await Event.findAll({
         attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"]],
         where: { is_published: true },
         order: [["city", "ASC"]],
+        raw: true,
       });
-      cities = citiesData.map((c) => c.city).filter((city) => city);
+      if (!citiesData || citiesData.length === 0) {
+        citiesData = await Event.findAll({
+          attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"]],
+          order: [["city", "ASC"]],
+          raw: true,
+        });
+      }
+      cities = citiesData.map((c) => c.city || (c.dataValues && c.dataValues.city)).filter(Boolean);
     } catch (error) {
       console.error("Error fetching cities:", error);
       cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"];

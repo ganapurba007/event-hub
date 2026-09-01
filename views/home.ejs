@@ -39,7 +39,7 @@
           Category
         </div>
         <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="category-filter-group">
-          <button type="button" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-category="All Categories">All Categories</button>
+          <a href="/events" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-category="All Categories">All Categories</a>
           <% categories.forEach(category => { %>
           <a href="events?category=<%= category.id %>" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white">
             <%= category.name %>
@@ -55,11 +55,22 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          City / Location
+          City
         </div>
         <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="city-filter-group">
-          <button type="button" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-city="All Cities">All Cities</button>
-          <button type="button" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white" data-city="Jakarta">Jakarta</button>
+          <a href="/events" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-city="All Cities">All Cities</a>
+
+          <% 
+            const displayCities = (typeof cities !== 'undefined' && cities && cities.length > 0) 
+              ? cities 
+              : ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Bali']; 
+          %>
+          <% displayCities.forEach(city => { %>
+          <% const cityName = typeof city === 'object' && city !== null ? (city.city || city.name) : city; %>
+          <% if (cityName) { %>
+          <a href="/events?city=<%= encodeURIComponent(cityName) %>" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white"><%= cityName %></a>
+          <% } %>
+          <% }); %>
         </div>
       </div>
 
