@@ -41,11 +41,11 @@
         <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1" id="category-filter-group">
           <a href="/events" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-primary text-white shadow-primary/20" data-category="All Categories">All Categories</a>
           <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
-          <% categories.forEach(category => { %>
-          <a href="/events?category=<%= category.id %>" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white">
-            <%= category.name %>
-          </a>
-          <% }); %>
+            <% categories.forEach(category => { %>
+              <a href="/events?category=<%= category.id %>" class="category-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white">
+                <%= category.name %>
+              </a>
+            <% }); %>
           <% } %>
         </div>
       </div>
@@ -68,12 +68,12 @@
               : ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Bali']; 
           %>
           <% displayCities.forEach(city => { %>
-          <% const cityName = typeof city === 'object' && city !== null ? (city.city || city.name) : city; %>
-          <% if (cityName) { %>
-          <a href="/events?city=<%= encodeURIComponent(cityName) %>" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white">
-            <%= cityName %>
-          </a>
-          <% } %>
+            <% const cityName = typeof city === 'object' && city !== null ? (city.city || city.name) : city; %>
+            <% if (cityName) { %>
+              <a href="/events?city=<%= encodeURIComponent(cityName) %>" class="city-pill whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-transparent bg-accent/60 text-gray-700 hover:bg-secondary hover:text-white">
+                <%= cityName %>
+              </a>
+            <% } %>
           <% }); %>
         </div>
       </div>
@@ -97,72 +97,72 @@
     <!-- Category Cards Grid -->
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
       <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
-      <% categories.slice(0, 6).forEach(category => { %>
-      <a href="/events?category=<%= category.id %>" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="<%= category.icon || 'bi bi-tags' %>"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">
-          <%= category.name %>
-        </h3>
-      </a>
-      <% }); %>
+        <% categories.slice(0, 6).forEach(category => { %>
+          <a href="/events?category=<%= category.id %>" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+              <i class="<%= category.icon || 'bi bi-tags' %>"></i>
+            </div>
+            <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">
+              <%= category.name %>
+            </h3>
+          </a>
+        <% }); %>
       <% } else { %>
-      <!-- Static Fallback Categories when database categories is empty -->
-      <a href="/events?category=1" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="bi bi-music-note-beamed"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Music</h3>
-      </a>
+        <!-- Static Fallback Categories when database categories is empty -->
+        <a href="/events?category=1" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Music</h3>
+        </a>
 
-      <a href="/events?category=2" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="bi bi-cpu"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Technology</h3>
-      </a>
+        <a href="/events?category=2" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+            <i class="bi bi-cpu"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Technology</h3>
+        </a>
 
-      <a href="/events?category=3" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="bi bi-trophy"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Sports</h3>
-      </a>
+        <a href="/events?category=3" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+            <i class="bi bi-trophy"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Sports</h3>
+        </a>
 
-      <a href="/events?category=4" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="bi bi-palette"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Exhibition</h3>
-      </a>
+        <a href="/events?category=4" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+            <i class="bi bi-palette"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Exhibition</h3>
+        </a>
 
-      <a href="/events?category=5" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="bi bi-people"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Community</h3>
-      </a>
+        <a href="/events?category=5" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+            <i class="bi bi-people"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Community</h3>
+        </a>
 
-      <a href="/events?category=6" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
-        <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
-          <i class="bi bi-grid"></i>
-        </div>
-        <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Others</h3>
-      </a>
+        <a href="/events?category=6" class="bg-white rounded-3xl p-5 border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-accent/50 text-primary group-hover:bg-primary group-hover:text-white flex items-center justify-center mb-3 transition-all duration-300 shadow-inner text-xl">
+            <i class="bi bi-grid"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">Others</h3>
+        </a>
       <% } %>
     </div>
   </section>
 
-  <!-- 4.2 SECTION: LATEST EVENTS -->
+  <!-- 4.2 SECTION: EVENTS BY CITY -->
   <section class="mb-14">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
           <span class="w-3 h-7 bg-primary rounded-full inline-block"></span>
-          Latest Events
+          Events by City
         </h2>
-        <p class="text-gray-500 text-sm mt-1">Discover the freshest and newly published events</p>
+        <p class="text-gray-500 text-sm mt-1">Explore top events curated by location</p>
       </div>
     </div>
 
@@ -181,77 +181,100 @@
           : ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Bali', 'Medan']; 
       %>
       <% popularCitiesList.forEach(city => { %>
-      <% const cityName = typeof city === 'object' && city !== null ? (city.city || city.name) : city; %>
-      <% if (cityName) { %>
-      <button type="button" class="city-tab-btn bg-white hover:bg-primary text-gray-700 hover:text-white border border-gray-100 hover:border-primary shadow-md shadow-gray-200/40 hover:shadow-primary/20 whitespace-nowrap px-5 py-3 rounded-2xl text-sm font-bold transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2 shrink-0 group" data-city="<%= cityName %>">
-        <svg class="w-4 h-4 text-primary group-hover:text-white transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <span><%= cityName %></span>
-      </button>
-      <% } %>
+        <% const cityName = typeof city === 'object' && city !== null ? (city.city || city.name) : city; %>
+        <% if (cityName) { %>
+          <button type="button" class="city-tab-btn bg-white hover:bg-primary text-gray-700 hover:text-white border border-gray-100 hover:border-primary shadow-md shadow-gray-200/40 hover:shadow-primary/20 whitespace-nowrap px-5 py-3 rounded-2xl text-sm font-bold transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2 shrink-0 group" data-city="<%= cityName %>">
+            <svg class="w-4 h-4 text-primary group-hover:text-white transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span><%= cityName %></span>
+          </button>
+        <% } %>
       <% }); %>
     </div>
 
     <!-- Responsive Grid (1 Col Mobile → 2 Col Tablet → 3 Col Desktop) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" id="latest-events-grid">
       <% if (typeof latestEvents !== 'undefined' && latestEvents && latestEvents.length > 0) { %>
-      <% latestEvents.slice(0, 6).forEach(event => { %>
-      <a href="/events/<%= event.id %>" class="latest-event-card block" data-city="<%= event.city || '' %>">
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
-          <!-- Thumbnail Image (16:9 ratio) -->
-          <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
-            <img src="<%= event.image_path || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80' %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-            <!-- Category Badge -->
-            <div class="absolute top-3 left-3">
-              <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
-                <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
-              </span>
-            </div>
-            <% if (event.price) { %>
-            <div class="absolute top-3 right-3">
-              <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
-                Rp<%= Number(event.price).toLocaleString('id-ID') %>
-              </span>
-            </div>
-            <% } %>
-          </div>
+        <% latestEvents.slice(0, 6).forEach(event => { %>
+          <a href="/events/<%= event.id %>" class="latest-event-card block" data-city="<%= event.city || '' %>">
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
+              
+              <!-- Thumbnail Image (16:9 ratio) - Uses image_path directly from database -->
+              <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+                <img src="<%= event.image_path %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                
+                <!-- Category Badge -->
+                <div class="absolute top-3 left-3">
+                  <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                    <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+                  </span>
+                </div>
 
-          <!-- Card Content Body -->
-          <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
-            <div class="space-y-2">
-              <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
-                <%= event.title %>
-              </h3>
-            </div>
-
-            <div class="space-y-2 pt-2 border-t border-gray-100 text-sm">
-              <div class="flex items-center text-gray-600 gap-2 font-medium">
-                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>
-                  <%= event.event_date ? new Date(event.event_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA' %>
-                </span>
+                <!-- Price Badge -->
+                <% if (typeof event.price !== 'undefined' && event.price !== null) { %>
+                  <div class="absolute top-3 right-3">
+                    <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                      <%= Number(event.price) === 0 ? 'Free' : ('Rp' + Number(event.price).toLocaleString('id-ID')) %>
+                    </span>
+                  </div>
+                <% } %>
               </div>
 
-              <div class="flex items-center text-gray-500 gap-2">
-                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="truncate">
-                  <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
-                </span>
+              <!-- Card Content Body -->
+              <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
+                <div class="space-y-2">
+                  <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
+                    <%= event.title %>
+                  </h3>
+                  <% if (event.description) { %>
+                    <p class="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                      <%= event.description %>
+                    </p>
+                  <% } %>
+                </div>
+
+                <div class="space-y-2.5 pt-3 border-t border-gray-100 text-sm">
+                  <!-- Date -->
+                  <div class="flex items-center text-gray-600 gap-2 font-medium">
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>
+                      <%= event.event_date ? new Date(event.event_date).toLocaleDateString('id-ID', { weekday:'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA' %>
+                    </span>
+                  </div>
+
+                  <!-- Venue & City -->
+                  <div class="flex items-center text-gray-500 gap-2">
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="truncate">
+                      <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+                    </span>
+                  </div>
+
+                  <!-- Organizer (User) -->
+                  <% const organizerName = (event.User && event.User.name) ? event.User.name : (event.organizer || null); %>
+                  <% if (organizerName) { %>
+                    <div class="flex items-center text-gray-500 gap-2 pt-1">
+                      <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span class="text-xs text-gray-500 truncate">
+                        Organized by <strong class="font-medium text-gray-700"><%= organizerName %></strong>
+                      </span>
+                    </div>
+                  <% } %>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </a>
-      <% }); %>
-      <% }  %>
-
+          </a>
+        <% }); %>
+      <% } %>
     </div>
 
     <!-- Empty State Message when no events match the selected city -->
@@ -263,77 +286,105 @@
         </svg>
       </div>
       <h4 class="text-lg font-bold text-gray-800">No Events Found</h4>
-      <p class="text-gray-500 text-sm mt-1">There are currently no latest events scheduled for the selected city.</p>
+      <p class="text-gray-500 text-sm mt-1">There are currently no events scheduled for the selected city.</p>
     </div>
   </section>
 
-  <!-- 4.3 SECTION: UPCOMING EVENTS -->
+  <!-- 4.3 SECTION: LATEST EVENTS -->
   <section class="mb-14">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
           <span class="w-3 h-7 bg-secondary rounded-full inline-block"></span>
-          Upcoming Events
+          Latest Events
         </h2>
-        <p class="text-gray-500 text-sm mt-1">Don't miss upcoming agendas happening soon</p>
+        <p class="text-gray-500 text-sm mt-1">Discover the freshest and newly published events</p>
       </div>
     </div>
 
     <!-- Responsive Grid (1 Col Mobile → 2 Col Tablet → 3 Col Desktop) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-      <% if (typeof upcomingEvents !== 'undefined' && upcomingEvents && upcomingEvents.length > 0) { %>
-      <% upcomingEvents.slice(0, 6).forEach(event => { %>
-      <a href="/events/<%= event.id %>" class="block" data-city="<%= event.city || '' %>">
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full group">
-          <!-- Thumbnail Image (16:9 ratio) -->
-          <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
-            <img src="<%= event.image_path || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80' %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-            <div class="absolute top-3 left-3">
-              <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
-                <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
-              </span>
-            </div>
-            <% if (event.price) { %>
-            <div class="absolute top-3 right-3">
-              <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
-                Rp<%= Number(event.price).toLocaleString('id-ID') %>
-              </span>
-            </div>
-            <% } %>
-          </div>
+      <% 
+        const latestEventsList = (typeof upcomingEvents !== 'undefined' && upcomingEvents && upcomingEvents.length > 0) 
+          ? upcomingEvents 
+          : ((typeof latestEvents !== 'undefined' && latestEvents) ? latestEvents : []); 
+      %>
+      <% if (latestEventsList && latestEventsList.length > 0) { %>
+        <% latestEventsList.slice(0, 6).forEach(event => { %>
+          <a href="/events/<%= event.id %>" class="block group" data-city="<%= event.city || '' %>">
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full">
+              
+              <!-- Thumbnail Image (16:9 ratio) - Uses image_path directly from database -->
+              <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+                <img src="<%= event.image_path %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                
+                <div class="absolute top-3 left-3">
+                  <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                    <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+                  </span>
+                </div>
 
-          <!-- Card Content Body -->
-          <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
-            <div class="space-y-2">
-              <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
-                <%= event.title %>
-              </h3>
-            </div>
-
-            <div class="space-y-2 pt-2 border-t border-gray-100 text-sm">
-              <div class="flex items-center text-gray-600 gap-2 font-medium">
-                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>
-                  <%= event.event_date ? new Date(event.event_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA' %>
-                </span>
+                <% if (typeof event.price !== 'undefined' && event.price !== null) { %>
+                  <div class="absolute top-3 right-3">
+                    <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                      <%= Number(event.price) === 0 ? 'Free' : ('Rp' + Number(event.price).toLocaleString('id-ID')) %>
+                    </span>
+                  </div>
+                <% } %>
               </div>
 
-              <div class="flex items-center text-gray-500 gap-2">
-                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="truncate">
-                  <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
-                </span>
+              <!-- Card Content Body -->
+              <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
+                <div class="space-y-2">
+                  <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
+                    <%= event.title %>
+                  </h3>
+                  <% if (event.description) { %>
+                    <p class="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                      <%= event.description %>
+                    </p>
+                  <% } %>
+                </div>
+
+                <div class="space-y-2.5 pt-3 border-t border-gray-100 text-sm">
+                  <!-- Date -->
+                  <div class="flex items-center text-gray-600 gap-2 font-medium">
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>
+                      <%= event.event_date ? new Date(event.event_date).toLocaleDateString('id-ID', { weekday:'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA' %>
+                    </span>
+                  </div>
+
+                  <!-- Venue & City -->
+                  <div class="flex items-center text-gray-500 gap-2">
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="truncate">
+                      <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+                    </span>
+                  </div>
+
+                  <!-- Organizer (User) -->
+                  <% const organizerName = (event.User && event.User.name) ? event.User.name : (event.organizer || null); %>
+                  <% if (organizerName) { %>
+                    <div class="flex items-center text-gray-500 gap-2 pt-1">
+                      <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span class="text-xs text-gray-500 truncate">
+                        Organized by <strong class="font-medium text-gray-700"><%= organizerName %></strong>
+                      </span>
+                    </div>
+                  <% } %>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </a>
-      <% }); %>
+          </a>
+        <% }); %>
       <% } %>
     </div>
   </section>

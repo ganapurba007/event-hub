@@ -252,12 +252,16 @@ app.get("/", async (req, res) => {
       });
       if (!citiesData || citiesData.length === 0) {
         citiesData = await Event.findAll({
-          attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"]],
+          attributes: [
+            [Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"],
+          ],
           order: [["city", "ASC"]],
           raw: true,
         });
       }
-      cities = citiesData.map((c) => c.city || (c.dataValues && c.dataValues.city)).filter(Boolean);
+      cities = citiesData
+        .map((c) => c.city || (c.dataValues && c.dataValues.city))
+        .filter(Boolean);
     } catch (error) {
       console.error("Error fetching cities:", error);
       cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"];
@@ -271,7 +275,7 @@ app.get("/", async (req, res) => {
     const upcomingEvents = await Event.findAll({
       where: { is_published: true, event_date: { [Op.gte]: new Date() } },
       include: [Category, User],
-      order: [["event_date", "ASC"]],
+      order: [["event_date", "DESC"]],
       limit: 6,
     });
     res.render("home", {
