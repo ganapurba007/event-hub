@@ -23,6 +23,7 @@ This template contains the complete **Home Page** structure inside `views/home.e
 - **Main Content**:
   - Search & Filter Bar
   - Section: Popular Categories
+  - Section: Explore by City (City Tabs above Latest Events)
   - Section: Latest Events (1 sample card for fallback template preview)
   - Section: Upcoming Events (1 sample card for fallback template preview)
 - **Footer**: Brand & copyright footer note
@@ -47,7 +48,12 @@ Located at the top of the main content:
 - Grid layout (`grid-cols-2` mobile → `sm:grid-cols-3` → `md:grid-cols-4` → `lg:grid-cols-6` desktop)
 - Displays category cards with icons and category names (supports dynamic `categories` array with static fallback)
 
-### 4.3 Section: Latest Events
+### 4.3 Section: Explore by City (City Tabs)
+- Section Title: `"Explore by City"`
+- Horizontal scrollable tab pills format with location pin icons
+- Displays cities dynamically from `cities` array (with static fallback)
+
+### 4.4 Section: Latest Events
 - Section Title: `"Latest Events"`
 - Grid layout (`grid-cols-1` mobile → `sm:grid-cols-2` tablet → `lg:grid-cols-3` desktop)
 - 1 sample dummy card for template view fallback
