@@ -22,6 +22,7 @@ This template contains the complete **Home Page** structure inside `views/home.e
 - **Header**: Logo & title (left), Navigation links: Home, Events, User dropdown (right)
 - **Main Content**:
   - Search & Filter Bar
+  - Section: Popular Categories
   - Section: Latest Events (1 sample card for fallback template preview)
   - Section: Upcoming Events (1 sample card for fallback template preview)
 - **Footer**: Brand & copyright footer note
@@ -41,7 +42,12 @@ Located at the top of the main content:
    - Pill / button group format (scrollable on mobile)
    - Cities: All Cities, Jakarta, Bandung, Surabaya, Yogyakarta, Bali
 
-### 4.2 Section: Latest Events
+### 4.2 Section: Popular Categories
+- Section Title: `"Popular Categories"`
+- Grid layout (`grid-cols-2` mobile → `sm:grid-cols-3` → `md:grid-cols-4` → `lg:grid-cols-6` desktop)
+- Displays category cards with icons and category names (supports dynamic `categories` array with static fallback)
+
+### 4.3 Section: Latest Events
 - Section Title: `"Latest Events"`
 - Grid layout (`grid-cols-1` mobile → `sm:grid-cols-2` tablet → `lg:grid-cols-3` desktop)
 - 1 sample dummy card for template view fallback
