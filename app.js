@@ -371,6 +371,15 @@ app.get("/events/:id", async (req, res) => {
 });
 // END DETAIL
 
+// PRIVACY
+app.get(["/privacy", "/privacy-policy"], (req, res) => {
+  res.render("privacy", {
+    user: req.session.user,
+    title: "Privacy Policy - EventHub",
+  });
+});
+// END PRIVACY
+
 // END CONTROLLERS
 
 // Sync table model
