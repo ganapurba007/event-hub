@@ -1,0 +1,310 @@
+<%- include('../../partials/header'); %>
+
+
+<!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+
+  <!-- PAGE HEADER & BREADCRUMB -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+        <a href="/" class="hover:text-primary transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-primary font-bold">Events</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+        <span class="w-3.5 h-9 bg-primary rounded-full inline-block"></span>
+        Explore Events
+      </h1>
+      <p class="text-gray-500 text-sm sm:text-base mt-1">Discover, join, or create amazing events around your city</p>
+    </div>
+
+    <!-- Create Event Button (Only visible for creators) -->
+    <% if (typeof user !== 'undefined' && user && user.role === 'creator') { %>
+    <a href="/events/create" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-secondary text-white font-semibold px-6 py-3.5 rounded-2xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-0.5 shrink-0">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      <span>Create Event</span>
+    </a>
+    <% } %>
+  </div>
+
+  <!-- SEARCH & SELECT2 DROPDOWN FILTER SECTION -->
+  <section class="bg-white rounded-3xl p-5 sm:p-7 shadow-lg shadow-gray-200/50 border border-accent/40 mb-10">
+
+    <!-- Search & Select2 Form -->
+    <form action="/events" method="GET">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+        <!-- 1. Search Input Field -->
+        <div class="md:col-span-5 relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input type="text" name="search" placeholder="Search events by title..." class="w-full pl-11 pr-4 py-3.5 bg-bg-base/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white text-gray-800 placeholder-gray-400 transition-all text-base" value="<%= (typeof searchQuery !== 'undefined' && searchQuery) ? searchQuery : '' %>" />
+        </div>
+
+        <!-- 2. Select2 Category Dropdown -->
+        <div class="md:col-span-3 relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-primary z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          </div>
+          <select id="select-category" name="category" class="w-full">
+            <option value="">All Categories</option>
+            <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+            <option value="<%= category.id %>" <%= (typeof selectedCategory !== 'undefined' && String(selectedCategory) === String(category.id)) ? 'selected' : '' %>>
+              <%= category.name %>
+            </option>
+            <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- 3. Select2 City Dropdown -->
+        <div class="md:col-span-3 relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-primary z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <select id="select-city" name="city" class="w-full">
+            <option value="">All Cities</option>
+            <% if (typeof cities !== 'undefined' && cities && cities.length > 0) { %>
+            <% cities.forEach(city => { %>
+            <option value="<%= city %>" <%= (typeof selectedCity !== 'undefined' && selectedCity === city) ? 'selected' : '' %>>
+              <%= city %>
+            </option>
+            <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- 4. Filter Submit Button -->
+        <div class="md:col-span-1">
+          <button type="submit" class="w-full h-[3.25rem] bg-primary hover:bg-secondary text-white font-semibold py-3.5 px-4 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-primary/20 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </form>
+
+  </section>
+
+  <% 
+    let selectedCatObj = (typeof categories !== 'undefined' && categories && typeof selectedCategory !== 'undefined' && selectedCategory) ? categories.find(c => String(c.id) === String(selectedCategory)) : null;
+    let selectedCatName = selectedCatObj ? selectedCatObj.name : null;
+
+    let activeFilterLabels = [];
+    if (typeof selectedCity !== 'undefined' && selectedCity) {
+      activeFilterLabels.push('city: ' + selectedCity);
+    }
+    if (selectedCatName) {
+      activeFilterLabels.push('category: ' + selectedCatName);
+    }
+    if (typeof searchQuery !== 'undefined' && searchQuery) {
+      activeFilterLabels.push('search: "' + searchQuery + '"');
+    }
+  %>
+
+  <% if (activeFilterLabels.length > 0) { %>
+  <!-- ACTIVE FILTER SUMMARY BAR -->
+  <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-accent/40 shadow-sm">
+    <div class="flex items-center gap-2.5 text-sm text-gray-700 font-medium">
+      <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+      </div>
+      <span>
+        Showing events based on <strong class="text-gray-900 font-bold"><%= activeFilterLabels.join(', ') %></strong>
+      </span>
+    </div>
+
+    <!-- Clear Filter Button -->
+    <a href="/events" class="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2.5 rounded-xl transition-all border border-red-100 hover:border-red-200 shrink-0 self-start sm:self-auto">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      <span>Clear Filter</span>
+    </a>
+  </div>
+  <% } %>
+
+  <!-- EVENT LIST CARDS SECTION -->
+  <section class="mb-14">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">All Available Events</h2>
+      <span class="text-sm font-semibold text-gray-500 bg-white px-3.5 py-1.5 rounded-xl border border-gray-200">
+        <%= (typeof events !== 'undefined' && events) ? events.length : 0 %> Events
+      </span>
+    </div>
+
+    <% if (typeof events !== 'undefined' && events && events.length > 0) { %>
+    <!-- Responsive Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" id="events-grid">
+      <% events.forEach((event, index) => { %>
+      <a href="/events/<%= event.id %>" class="event-card-item block group <%= index >= 6 ? 'hidden' : '' %>" data-city="<%= event.city || '' %>">
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-md shadow-gray-200/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden flex flex-col h-full">
+
+          <!-- Thumbnail Image (16:9 ratio) -->
+          <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
+            <img src="<%= event.image_path %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+
+            <!-- Category Badge -->
+            <div class="absolute top-3 left-3">
+              <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                <%= (event.Category && event.Category.name) ? event.Category.name : 'Event' %>
+              </span>
+            </div>
+
+            <!-- Price Badge -->
+            <% if (typeof event.price !== 'undefined' && event.price !== null) { %>
+            <div class="absolute top-3 right-3">
+              <span class="inline-block bg-accent/95 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                <%= Number(event.price) === 0 ? 'Free' : ('Rp' + Number(event.price).toLocaleString('id-ID')) %>
+              </span>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Card Content Body -->
+          <div class="p-5 sm:p-6 flex flex-col flex-grow justify-between gap-4">
+            <div class="space-y-2">
+              <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-snug">
+                <%= event.title %>
+              </h3>
+              <% if (event.description) { %>
+              <p class="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                <%= event.description %>
+              </p>
+              <% } %>
+            </div>
+
+            <div class="space-y-2.5 pt-3 border-t border-gray-100 text-sm">
+              <!-- Date -->
+              <div class="flex items-center text-gray-600 gap-2 font-medium">
+                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>
+                  <%= event.event_date ? new Date(event.event_date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA' %>
+                </span>
+              </div>
+
+              <!-- Venue & City -->
+              <div class="flex items-center text-gray-500 gap-2">
+                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="truncate">
+                  <%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong>
+                </span>
+              </div>
+
+              <!-- Organizer -->
+              <% const organizerName = (event.User && event.User.name) ? event.User.name : (event.organizer || null); %>
+              <% if (organizerName) { %>
+              <div class="flex items-center text-gray-500 gap-2 pt-1">
+                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span class="text-xs text-gray-500 truncate">
+                  Organized by <strong class="font-medium text-gray-700"><%= organizerName %></strong>
+                </span>
+              </div>
+              <% } %>
+            </div>
+          </div>
+
+        </div>
+      </a>
+      <% }); %>
+    </div>
+
+    <!-- Load More Button Container (Shown if total events > 6) -->
+    <% if (events.length > 6) { %>
+    <div class="mt-10 text-center" id="load-more-container">
+      <button type="button" id="load-more-btn" class="inline-flex items-center gap-2 bg-white hover:bg-primary text-gray-700 hover:text-white border border-gray-200 hover:border-primary px-8 py-3.5 rounded-2xl font-bold transition-all duration-300 shadow-md shadow-gray-200/50 hover:shadow-primary/20 transform hover:-translate-y-0.5">
+        <span>Load More Events</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+    </div>
+    <% } %>
+
+    <% } else { %>
+    <!-- Empty State Message when no events match the search/filter -->
+    <div class="text-center py-16 bg-white rounded-3xl border border-gray-100 shadow-sm">
+      <div class="w-16 h-16 rounded-full bg-accent/40 text-primary mx-auto flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800">No Events Found</h3>
+      <p class="text-gray-500 text-sm mt-1.5 max-w-md mx-auto">We couldn't find any events matching your selected filters or search query. Try resetting your search filters.</p>
+      <a href="/events" class="inline-block mt-5 px-6 py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-white font-semibold rounded-xl transition-all">
+        Clear Filters
+      </a>
+    </div>
+    <% } %>
+
+  </section>
+
+</main>
+
+<!-- Initialization Scripts -->
+<script>
+  $(document).ready(function() {
+    // Initialize Select2 for Category & City dropdowns
+    if ($.fn.select2) {
+      $('#select-category').select2({
+        placeholder: "All Categories",
+        allowClear: true,
+        width: '100%'
+      });
+
+      $('#select-city').select2({
+        placeholder: "All Cities",
+        allowClear: true,
+        width: '100%'
+      });
+    }
+
+    // Load More Client-side Script
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const hiddenCards = document.querySelectorAll('.event-card-item.hidden');
+    const BATCH_SIZE = 6;
+    let currentIndex = 0;
+
+    if (loadMoreBtn && hiddenCards.length > 0) {
+      loadMoreBtn.addEventListener('click', () => {
+        const nextBatch = Array.from(hiddenCards).slice(currentIndex, currentIndex + BATCH_SIZE);
+        nextBatch.forEach(card => {
+          card.classList.remove('hidden');
+        });
+        currentIndex += BATCH_SIZE;
+
+        if (currentIndex >= hiddenCards.length) {
+          if (loadMoreContainer) {
+            loadMoreContainer.classList.add('hidden');
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<%- include('../../partials/footer'); %>

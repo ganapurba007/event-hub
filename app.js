@@ -239,6 +239,7 @@ EventAttachment.belongsTo(Event, {
 });
 
 // CONTROLLERS
+// INDEX
 app.get("/", async (req, res) => {
   try {
     const categories = await Category.findAll();
@@ -290,6 +291,66 @@ app.get("/", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+// END INDEX
+
+// EVENTS
+app.get("/events", async (req, res) => {
+  try {
+    const { category, city, search } = req.query;
+    const where = { is_published: true };
+
+    if (category) where.category_id = category;
+    if (city) where.city = city;
+    if (search) where.title = { [Op.like]: `%${search}%` };
+
+    const events = await Event.findAll({
+      where,
+      include: [Category, User],
+      order: [["event_date", "DESC"]],
+    });
+
+    const categories = await Category.findAll();
+    let cities = [];
+    try {
+      let citiesData = await Event.findAll({
+        attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"]],
+        where: { is_published: true },
+        order: [["city", "ASC"]],
+        raw: true,
+      });
+      if (!citiesData || citiesData.length === 0) {
+        citiesData = await Event.findAll({
+          attributes: [
+            [Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"],
+          ],
+          order: [["city", "ASC"]],
+          raw: true,
+        });
+      }
+      cities = citiesData
+        .map((c) => c.city || (c.dataValues && c.dataValues.city))
+        .filter(Boolean);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"];
+    }
+
+    res.render("events/index", {
+      user: req.session.user,
+      events,
+      categories,
+      cities,
+      selectedCategory: category,
+      selectedCity: city,
+      searchQuery: search,
+    });
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END EVENTS
+
 // END CONTROLLERS
 
 // Sync table model
