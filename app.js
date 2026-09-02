@@ -351,6 +351,26 @@ app.get("/events", async (req, res) => {
 });
 // END EVENTS
 
+// DETAIL
+app.get("/events/:id", async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id, {
+      include: [Category, User, EventAttachment],
+    });
+    if (!event) {
+      return res.status(404).send("Event not found");
+    }
+    res.render("events/detail", {
+      user: req.session.user,
+      event,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END DETAIL
+
 // END CONTROLLERS
 
 // Sync table model
