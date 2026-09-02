@@ -372,13 +372,22 @@ app.get("/events/:id", async (req, res) => {
 // END DETAIL
 
 // PRIVACY
-app.get(["/privacy", "/privacy-policy"], (req, res) => {
+app.get("/privacy", (req, res) => {
   res.render("privacy", {
     user: req.session.user,
     title: "Privacy Policy - EventHub",
   });
 });
 // END PRIVACY
+
+// TERMS OF SERVICE
+app.get(["/terms", "/terms-of-service"], (req, res) => {
+  res.render("terms", {
+    user: req.session.user,
+    title: "Terms of Service - EventHub",
+  });
+});
+// END TERMS OF SERVICE
 
 // END CONTROLLERS
 
