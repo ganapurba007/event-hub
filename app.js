@@ -389,6 +389,24 @@ app.get(["/terms", "/terms-of-service"], (req, res) => {
 });
 // END TERMS OF SERVICE
 
+// REGISTER
+app.get("/register", (req, res) => {
+  res.render("auth/register", {
+    user: req.session.user,
+    error: [],
+  });
+});
+// END REGISTER
+
+// LGOIN
+app.get("/login", (req, res) => {
+  res.render("auth/login", {
+    user: req.session.user,
+    error: [],
+  });
+});
+// END LOGIN
+
 // END CONTROLLERS
 
 // Sync table model
