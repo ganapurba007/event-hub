@@ -1,0 +1,138 @@
+<%- include('../../partials/header'); %>
+
+<!-- ==================== MAIN LOGIN CONTAINER ==================== -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[calc(100vh-160px)]">
+
+  <div class="w-full max-w-lg">
+
+    <!-- LOGIN CARD -->
+    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-accent/40 shadow-xl shadow-gray-200/50 space-y-8">
+
+      <!-- Card Header & Branding -->
+      <div class="text-center space-y-2">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight pt-2">
+          Welcome Back
+        </h1>
+        <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
+          Sign in to your EventHub account to access your e-tickets, manage your orders, or publish events.
+        </p>
+      </div>
+
+      <!-- ERROR ALERT BANNER -->
+      <% if (typeof error !== 'undefined' && error && ((Array.isArray(error) && error.length > 0) || typeof error === 'string')) { %>
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs sm:text-sm flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div class="space-y-1">
+          <h4 class="font-bold">Authentication Error</h4>
+          <% if (Array.isArray(error)) { %>
+          <ul class="list-disc list-inside space-y-0.5">
+            <% error.forEach(msg => { %>
+            <li><%= msg %></li>
+            <% }); %>
+          </ul>
+          <% } else { %>
+          <p><%= error %></p>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- LOGIN FORM -->
+      <form action="/login" method="POST" class="space-y-5">
+
+        <!-- 1. Email Address -->
+        <div class="space-y-1.5">
+          <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-600">
+            Email Address <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <input type="email" id="email" name="email" placeholder="name@example.com" required class="w-full pl-11 pr-4 py-3.5 bg-bg-base/40 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white text-gray-800 placeholder-gray-400 text-sm font-medium transition-all" />
+          </div>
+        </div>
+
+        <!-- 2. Password -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-600">
+              Password <span class="text-red-500">*</span>
+            </label>
+            <a href="#" class="text-xs text-primary font-bold hover:underline">
+              Forgot Password?
+            </a>
+          </div>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <input type="password" id="password" name="password" placeholder="••••••••" required class="w-full pl-11 pr-12 py-3.5 bg-bg-base/40 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white text-gray-800 placeholder-gray-400 text-sm font-medium transition-all" />
+
+            <!-- Toggle Password Eye Button -->
+            <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
+              <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div class="flex items-center gap-2.5 pt-1">
+          <input type="checkbox" id="remember" name="remember" class="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300 cursor-pointer" />
+          <label for="remember" class="text-xs text-gray-600 font-medium cursor-pointer">
+            Remember me on this device
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full bg-primary hover:bg-secondary text-white font-extrabold text-base py-4 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+          <span>Sign In</span>
+        </button>
+
+      </form>
+
+      <!-- Footer Link to Register -->
+      <div class="text-center pt-2 border-t border-gray-100">
+        <p class="text-xs sm:text-sm text-gray-500 font-medium">
+          Don't have an account yet?
+          <a href="/register" class="text-primary font-bold hover:underline ml-1">
+            Register Now
+          </a>
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+<!-- ==================== END MAIN CONTAINER ==================== -->
+
+<!-- Interactive Password Toggle Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const pwdInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('toggle-password');
+
+    if (toggleBtn && pwdInput) {
+      toggleBtn.addEventListener('click', () => {
+        const isPassword = pwdInput.type === 'password';
+        pwdInput.type = isPassword ? 'text' : 'password';
+      });
+    }
+  });
+</script>
+
+<%- include('../../partials/footer'); %>

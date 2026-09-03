@@ -238,6 +238,22 @@ EventAttachment.belongsTo(Event, {
   onUpdate: "CASCADE",
 });
 
+// MIDDLEWARE
+const requiredAuth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+  next();
+};
+
+const requiredCreator = (req, res, next) => {
+  if (!req.session.user || req.session.user.role !== "creator") {
+    return res.redirect("/");
+  }
+  next();
+};
+// END MIDDLEWARE
+
 // CONTROLLERS
 // INDEX
 app.get("/", async (req, res) => {
