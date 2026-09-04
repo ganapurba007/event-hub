@@ -262,48 +262,19 @@
         </div>
 
         <% if (typeof user !== 'undefined' && user) { %>
-        <!-- BUY TICKET FORM (LOGGED IN USER) -->
-        <form action="/orders" method="POST" class="space-y-5">
-          <input type="hidden" name="event_id" value="<%= event.id %>" />
-
-          <!-- Quantity Counter Selector -->
-          <% if (!isSoldOut) { %>
-          <div class="space-y-2">
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500">
-              Quantity
-            </label>
-            <div class="flex items-center justify-between bg-bg-base/60 border border-gray-200 rounded-2xl p-1.5">
-              <button type="button" id="btn-minus" class="w-10 h-10 rounded-xl bg-white hover:bg-accent/50 text-gray-700 font-bold flex items-center justify-center transition-all border border-gray-200/80 shadow-sm disabled:opacity-40">
-                -
-              </button>
-              <input type="number" id="ticket-qty" name="quantity" value="1" min="1" max="<%= avail %>" class="w-16 text-center font-extrabold text-lg bg-transparent text-gray-800 focus:outline-none" readonly />
-              <button type="button" id="btn-plus" class="w-10 h-10 rounded-xl bg-white hover:bg-accent/50 text-gray-700 font-bold flex items-center justify-center transition-all border border-gray-200/80 shadow-sm disabled:opacity-40">
-                +
-              </button>
-            </div>
-          </div>
-
-          <!-- Total Amount Display -->
-          <div class="bg-accent/30 rounded-2xl p-4 border border-accent/60 flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-gray-600">Total Price</span>
-            <span id="total-price-display" class="text-xl font-extrabold text-primary">
-              <%= ticketPrice === 0 ? 'Free' : ('Rp' + ticketPrice.toLocaleString('id-ID')) %>
-            </span>
-          </div>
-
-          <!-- Submit Buy Button -->
-          <button type="submit" class="w-full bg-primary hover:bg-secondary text-white font-extrabold text-base py-4 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            <span>Buy Ticket Now</span>
-          </button>
-          <% } else { %>
-          <button type="button" disabled class="w-full bg-gray-200 text-gray-400 font-extrabold text-base py-4 rounded-2xl cursor-not-allowed flex items-center justify-center gap-2">
-            <span>Event Sold Out</span>
-          </button>
-          <% } %>
-        </form>
+        <!-- BUY TICKET ACTION (LOGGED IN USER) -->
+        <% if (!isSoldOut) { %>
+        <a href="/events/<%= event.id %>/checkout" class="w-full bg-primary hover:bg-secondary text-white font-extrabold text-base py-4 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span>Buy Ticket Now</span>
+        </a>
+        <% } else { %>
+        <button type="button" disabled class="w-full bg-gray-200 text-gray-400 font-extrabold text-base py-4 rounded-2xl cursor-not-allowed flex items-center justify-center gap-2">
+          <span>Event Sold Out</span>
+        </button>
+        <% } %>
 
         <% } else { %>
         <!-- LOGIN REQUIREMENT PROMPT & BUTTONS (GUEST USER) -->
@@ -348,59 +319,5 @@
 
 </main>
 <!-- ==================== END MAIN CONTENT ==================== -->
-
-<!-- Interactive Quantity Counter Script -->
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const qtyInput = document.getElementById('ticket-qty');
-    const btnMinus = document.getElementById('btn-minus');
-    const btnPlus = document.getElementById('btn-plus');
-    const totalPriceDisplay = document.getElementById('total-price-display');
-    const unitPrice = <%= Number(event.price || 0) %>;
-    const maxQty = <%= Number(event.available_tickets || 0) %>;
-
-    function updatePrice() {
-      if (!qtyInput) return;
-      let qty = parseInt(qtyInput.value) || 1;
-      if (qty < 1) qty = 1;
-      if (qty > maxQty) qty = maxQty;
-      qtyInput.value = qty;
-
-      if (btnMinus) btnMinus.disabled = (qty <= 1);
-      if (btnPlus) btnPlus.disabled = (qty >= maxQty);
-
-      if (totalPriceDisplay) {
-        if (unitPrice === 0) {
-          totalPriceDisplay.textContent = 'Free';
-        } else {
-          const total = unitPrice * qty;
-          totalPriceDisplay.textContent = 'Rp' + total.toLocaleString('id-ID');
-        }
-      }
-    }
-
-    if (btnMinus) {
-      btnMinus.addEventListener('click', () => {
-        let qty = parseInt(qtyInput.value) || 1;
-        if (qty > 1) {
-          qtyInput.value = qty - 1;
-          updatePrice();
-        }
-      });
-    }
-
-    if (btnPlus) {
-      btnPlus.addEventListener('click', () => {
-        let qty = parseInt(qtyInput.value) || 1;
-        if (qty < maxQty) {
-          qtyInput.value = qty + 1;
-          updatePrice();
-        }
-      });
-    }
-
-    updatePrice();
-  });
-</script>
 
 <%- include('../../partials/footer'); %>

@@ -532,6 +532,112 @@ app.get("/logout", handleLogout);
 app.post("/logout", handleLogout);
 // END LOGIC LOGOUT
 
+// CHECKOUT PAGE
+app.get("/events/:id/checkout", requiredAuth, async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id, {
+      include: [Category, User],
+    });
+    if (!event) {
+      return res.status(404).send("Event not found");
+    }
+    res.render("orders/checkout", {
+      user: req.session.user,
+      event,
+      error: [],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END CHECKOUT PAGE
+
+// CREATE ORDER LOGIC
+app.post("/orders", requiredAuth, async (req, res) => {
+  try {
+    const { event_id, quantity, name, email, phone } = req.body;
+    const event = await Event.findByPk(event_id, {
+      include: [Category, User],
+    });
+    if (!event) {
+      return res.status(404).send("Event not found");
+    }
+
+    const qty = parseInt(quantity) || 1;
+    if (qty <= 0 || qty > event.available_tickets) {
+      return res.render("orders/checkout", {
+        user: req.session.user,
+        event,
+        error: ["Invalid ticket quantity or tickets sold out"],
+      });
+    }
+
+    const unitPrice = Number(event.price || 0);
+    const total_amount = unitPrice * qty;
+
+    // Create Order Record
+    const order = await Order.create({
+      user_id: req.session.user.id,
+      event_id: event.id,
+      quantity: qty,
+      total_amount,
+      status: "completed",
+    });
+
+    // Create Ticket Entries for each ticket
+    for (let i = 0; i < qty; i++) {
+      const ticketCode = `EH-${event.id}-${order.id}-${Math.floor(1000 + Math.random() * 9000)}-${i + 1}`;
+      await Ticket.create({
+        order_id: order.id,
+        event_id: event.id,
+        ticket_code: ticketCode,
+        barcode_data: ticketCode,
+        attendee_name: name || req.session.user.name,
+        attendee_email: email || req.session.user.email,
+        attendee_phone: phone || req.session.user.phone || "",
+      });
+    }
+
+    // Deduct available tickets
+    await event.update({
+      available_tickets: event.available_tickets - qty,
+    });
+
+    req.session.message = `Order successful! ${qty} ticket(s) booked for ${event.title}.`;
+    res.redirect("/my-orders");
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END CREATE ORDER LOGIC
+
+// MY ORDERS PAGE
+app.get("/my-orders", requiredAuth, async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      where: { user_id: req.session.user.id },
+      include: [
+        { model: Event, include: [Category] },
+        { model: Ticket },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.render("orders/index", {
+      user: req.session.user,
+      orders,
+      message: req.session.message || null,
+    });
+    delete req.session.message;
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END MY ORDERS PAGE
+
 // END CONTROLLERS
 
 // Sync table model
