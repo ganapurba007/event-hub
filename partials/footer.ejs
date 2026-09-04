@@ -48,7 +48,7 @@
             <li>
               <a href="/events?category=1" class="text-gray-500 hover:text-primary transition-colors inline-block">Categories</a>
             </li>
-            <% if(user) { %>
+            <% if (typeof user !== 'undefined' && user && user.role === 'creator') { %>
             <li>
               <a href="/events/create" class="text-gray-500 hover:text-primary transition-colors inline-block">Create Event</a>
             </li>
@@ -117,19 +117,19 @@
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Dynamic Universal Select2 Auto-Initializer
       if (typeof $ !== 'undefined' && $.fn.select2) {
-        $('select.select2, select[class*="select2"]').each(function () {
+        $('select.select2, select[class*="select2"]').each(function() {
           const $el = $(this);
           if ($el.hasClass('select2-hidden-accessible')) return;
 
           const placeholder = $el.data('placeholder') || undefined;
-          const allowClear = $el.data('allow-clear') !== undefined 
-            ? Boolean($el.data('allow-clear')) 
-            : (placeholder ? true : false);
-          
+          const allowClear = $el.data('allow-clear') !== undefined ?
+            Boolean($el.data('allow-clear')) :
+            (placeholder ? true : false);
+
           const minSearchAttr = $el.data('minimum-results-for-search');
-          const minSearch = minSearchAttr !== undefined
-            ? (String(minSearchAttr) === 'Infinity' ? Infinity : Number(minSearchAttr))
-            : ($el.hasClass('select2-no-search') || $el.hasClass('select2-role') ? Infinity : 0);
+          const minSearch = minSearchAttr !== undefined ?
+            (String(minSearchAttr) === 'Infinity' ? Infinity : Number(minSearchAttr)) :
+            ($el.hasClass('select2-no-search') || $el.hasClass('select2-role') ? Infinity : 0);
 
           $el.select2({
             placeholder: placeholder,

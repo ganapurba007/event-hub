@@ -413,8 +413,11 @@ app.get(["/terms", "/terms-of-service"], (req, res) => {
 
 // REGISTER
 app.get("/register", (req, res) => {
+  if (req.session && req.session.user) {
+    return res.redirect("/");
+  }
   res.render("auth/register", {
-    user: req.session.user,
+    user: req.session ? req.session.user : undefined,
     error: [],
   });
 });
@@ -422,8 +425,11 @@ app.get("/register", (req, res) => {
 
 // LOGIN
 app.get("/login", (req, res) => {
+  if (req.session && req.session.user) {
+    return res.redirect("/");
+  }
   res.render("auth/login", {
-    user: req.session.user,
+    user: req.session ? req.session.user : undefined,
     error: [],
   });
 });
@@ -467,6 +473,64 @@ app.post("/register", async (req, res) => {
   }
 });
 // END LOGIC REGISTER
+
+// LOGIC LOGIN
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.render("auth/login", {
+        user: req.session.user,
+        error: ["Email not found"],
+        formData: req.body,
+      });
+    }
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.render("auth/login", {
+        user: req.session.user,
+        error: ["Invalid password"],
+        formData: req.body,
+      });
+    }
+    req.session.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+    req.session.message = "Login successful";
+    res.redirect("/");
+  } catch (error) {
+    console.log(error);
+    return res.render("auth/login", {
+      user: req.session.user,
+      error: ["Something went wrong"],
+      formData: req.body,
+    });
+  }
+});
+// END LOGIC LOGIN
+
+// LOGIC LOGOUT
+const handleLogout = (req, res) => {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+      }
+      res.clearCookie("connect.sid");
+      return res.redirect("/login");
+    });
+  } else {
+    return res.redirect("/login");
+  }
+};
+
+app.get("/logout", handleLogout);
+app.post("/logout", handleLogout);
+// END LOGIC LOGOUT
 
 // END CONTROLLERS
 
