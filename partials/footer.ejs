@@ -112,10 +112,35 @@
   </footer>
   <!-- ==================== END FOOTER ==================== -->
 
-  <!-- Client-Side Interactive Active State Script -->
+  <!-- Client-Side Interactive Active State & Universal Select2 Script -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Interactive Toggle for Category Pills
+      // 1. Dynamic Universal Select2 Auto-Initializer
+      if (typeof $ !== 'undefined' && $.fn.select2) {
+        $('select.select2, select[class*="select2"]').each(function () {
+          const $el = $(this);
+          if ($el.hasClass('select2-hidden-accessible')) return;
+
+          const placeholder = $el.data('placeholder') || undefined;
+          const allowClear = $el.data('allow-clear') !== undefined 
+            ? Boolean($el.data('allow-clear')) 
+            : (placeholder ? true : false);
+          
+          const minSearchAttr = $el.data('minimum-results-for-search');
+          const minSearch = minSearchAttr !== undefined
+            ? (String(minSearchAttr) === 'Infinity' ? Infinity : Number(minSearchAttr))
+            : ($el.hasClass('select2-no-search') || $el.hasClass('select2-role') ? Infinity : 0);
+
+          $el.select2({
+            placeholder: placeholder,
+            allowClear: allowClear,
+            minimumResultsForSearch: minSearch,
+            width: '100%'
+          });
+        });
+      }
+
+      // 2. Interactive Toggle for Category Pills
       const catPills = document.querySelectorAll('.category-pill');
       catPills.forEach(pill => {
         pill.addEventListener('click', () => {
@@ -128,7 +153,7 @@
         });
       });
 
-      // Interactive Toggle for City Pills
+      // 3. Interactive Toggle for City Pills
       const cityPills = document.querySelectorAll('.city-pill');
       cityPills.forEach(pill => {
         pill.addEventListener('click', () => {

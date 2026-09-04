@@ -3,6 +3,7 @@ const express = require("express");
 const mysql = require("mysql2");
 const { Sequelize, DataTypes, Op } = require("sequelize");
 const session = require("express-session");
+const bcrypt = require("bcrypt");
 const path = require("path");
 const env = process.env;
 const app = express();
@@ -295,8 +296,13 @@ app.get("/", async (req, res) => {
       order: [["event_date", "DESC"]],
       limit: 6,
     });
+    const message = req.session.message || req.query.message || null;
+    if (req.session.message) {
+      delete req.session.message;
+    }
     res.render("home", {
       user: req.session.user,
+      message,
       categories,
       cities,
       latestEvents,
@@ -414,7 +420,7 @@ app.get("/register", (req, res) => {
 });
 // END REGISTER
 
-// LGOIN
+// LOGIN
 app.get("/login", (req, res) => {
   res.render("auth/login", {
     user: req.session.user,
@@ -422,6 +428,45 @@ app.get("/login", (req, res) => {
   });
 });
 // END LOGIN
+
+// LOGIC REGISTER
+app.post("/register", async (req, res) => {
+  try {
+    const { name, email, phone, password, role } = req.body;
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.render("auth/register", {
+        user: req.session.user,
+        error: ["Email already exists"],
+        formData: req.body,
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+      role: role || "user",
+    });
+    req.session.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+    req.session.message = "Registration successful";
+    res.redirect("/");
+  } catch (error) {
+    console.log(error);
+    return res.render("auth/register", {
+      user: req.session.user,
+      error: ["Something went wrong"],
+      formData: req.body,
+    });
+  }
+});
+// END LOGIC REGISTER
 
 // END CONTROLLERS
 

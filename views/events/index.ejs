@@ -54,7 +54,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
           </div>
-          <select id="select-category" name="category" class="w-full">
+          <select name="category" class="select2-category w-full">
             <option value="">All Categories</option>
             <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
             <% categories.forEach(category => { %>
@@ -74,7 +74,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <select id="select-city" name="city" class="w-full">
+          <select name="city" class="select2-city w-full">
             <option value="">All Cities</option>
             <% if (typeof cities !== 'undefined' && cities && cities.length > 0) { %>
             <% cities.forEach(city => { %>
@@ -263,48 +263,5 @@
   </section>
 
 </main>
-
-<!-- Initialization Scripts -->
-<script>
-  $(document).ready(function() {
-    // Initialize Select2 for Category & City dropdowns
-    if ($.fn.select2) {
-      $('#select-category').select2({
-        placeholder: "All Categories",
-        allowClear: true,
-        width: '100%'
-      });
-
-      $('#select-city').select2({
-        placeholder: "All Cities",
-        allowClear: true,
-        width: '100%'
-      });
-    }
-
-    // Load More Client-side Script
-    const loadMoreBtn = document.getElementById('load-more-btn');
-    const loadMoreContainer = document.getElementById('load-more-container');
-    const hiddenCards = document.querySelectorAll('.event-card-item.hidden');
-    const BATCH_SIZE = 6;
-    let currentIndex = 0;
-
-    if (loadMoreBtn && hiddenCards.length > 0) {
-      loadMoreBtn.addEventListener('click', () => {
-        const nextBatch = Array.from(hiddenCards).slice(currentIndex, currentIndex + BATCH_SIZE);
-        nextBatch.forEach(card => {
-          card.classList.remove('hidden');
-        });
-        currentIndex += BATCH_SIZE;
-
-        if (currentIndex >= hiddenCards.length) {
-          if (loadMoreContainer) {
-            loadMoreContainer.classList.add('hidden');
-          }
-        }
-      });
-    }
-  });
-</script>
 
 <%- include('../../partials/footer'); %>
