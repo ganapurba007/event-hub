@@ -553,90 +553,70 @@ app.get("/events/:id/checkout", requiredAuth, async (req, res) => {
 });
 // END CHECKOUT PAGE
 
-// CREATE ORDER LOGIC
-app.post("/orders", requiredAuth, async (req, res) => {
+// PROFILE
+app.get("/profile", requiredAuth, async (req, res) => {
   try {
-    const { event_id, quantity, name, email, phone } = req.body;
-    const event = await Event.findByPk(event_id, {
-      include: [Category, User],
-    });
-    if (!event) {
-      return res.status(404).send("Event not found");
-    }
-
-    const qty = parseInt(quantity) || 1;
-    if (qty <= 0 || qty > event.available_tickets) {
-      return res.render("orders/checkout", {
-        user: req.session.user,
-        event,
-        error: ["Invalid ticket quantity or tickets sold out"],
-      });
-    }
-
-    const unitPrice = Number(event.price || 0);
-    const total_amount = unitPrice * qty;
-
-    // Create Order Record
-    const order = await Order.create({
-      user_id: req.session.user.id,
-      event_id: event.id,
-      quantity: qty,
-      total_amount,
-      status: "completed",
-    });
-
-    // Create Ticket Entries for each ticket
-    for (let i = 0; i < qty; i++) {
-      const ticketCode = `EH-${event.id}-${order.id}-${Math.floor(1000 + Math.random() * 9000)}-${i + 1}`;
-      await Ticket.create({
-        order_id: order.id,
-        event_id: event.id,
-        ticket_code: ticketCode,
-        barcode_data: ticketCode,
-        attendee_name: name || req.session.user.name,
-        attendee_email: email || req.session.user.email,
-        attendee_phone: phone || req.session.user.phone || "",
-      });
-    }
-
-    // Deduct available tickets
-    await event.update({
-      available_tickets: event.available_tickets - qty,
-    });
-
-    req.session.message = `Order successful! ${qty} ticket(s) booked for ${event.title}.`;
-    res.redirect("/my-orders");
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Internal Server Error");
-  }
-});
-// END CREATE ORDER LOGIC
-
-// MY ORDERS PAGE
-app.get("/my-orders", requiredAuth, async (req, res) => {
-  try {
-    const orders = await Order.findAll({
+    const user = await User.findByPk(req.session.user.id);
+    const order = await Order.count({
       where: { user_id: req.session.user.id },
-      include: [
-        { model: Event, include: [Category] },
-        { model: Ticket },
-      ],
-      order: [["created_at", "DESC"]],
     });
-
-    res.render("orders/index", {
-      user: req.session.user,
-      orders,
-      message: req.session.message || null,
+    const event = await Event.count({
+      where: { creator_id: req.session.user.id },
     });
+    const message = req.session.message || null;
     delete req.session.message;
+
+    res.render("users/profile", {
+      user: req.session.user,
+      userData: user,
+      stats: {
+        orders: order,
+        events: event,
+      },
+      message,
+      error: [],
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
   }
 });
-// END MY ORDERS PAGE
+
+// UPDATE PROFILE
+app.post("/profile", requiredAuth, async (req, res) => {
+  try {
+    const { name, email, phone } = req.body;
+    await User.update(
+      { name, email, phone },
+      { where: { id: req.session.user.id } },
+    );
+    req.session.user.name = name;
+    req.session.user.email = email;
+    req.session.user.phone = phone;
+    req.session.message = "Profile updated successfully";
+    res.redirect("/profile");
+  } catch (error) {
+    console.log(error);
+    const user = await User.findByPk(req.session.user.id);
+    const order = await Order.count({
+      where: { user_id: req.session.user.id },
+    });
+    const event = await Event.count({
+      where: { creator_id: req.session.user.id },
+    });
+    res.render("users/profile", {
+      user: req.session.user,
+      userData: user,
+      stats: {
+        orders: order,
+        events: event,
+      },
+      message,
+      error: ["Something went wrong"],
+    });
+  }
+});
+// END UPDATE PROFILE
 
 // END CONTROLLERS
 
