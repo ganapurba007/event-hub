@@ -618,6 +618,37 @@ app.post("/profile", requiredAuth, async (req, res) => {
 });
 // END UPDATE PROFILE
 
+// MY ORDER PAGE
+app.get("/my-orders", requiredAuth, async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      where: { user_id: req.session.user.id },
+      include: [
+        {
+          model: Event,
+          include: [
+            {
+              model: Category,
+            },
+            {
+              model: User,
+            },
+          ],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+    res.render("orders/my-orders", {
+      user: req.session.user,
+      orders,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END MY ORDER PAGE
+
 // END CONTROLLERS
 
 // Sync table model

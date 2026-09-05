@@ -44,7 +44,7 @@
 
           <!-- Organizer Info Box with Name, Phone, Email -->
           <% 
-            const organizerName = (event.User && event.User.name) ? event.User.name : (event.organizer || 'Event Organizer'); 
+            const organizerName = (event.User && event.User.name) ? event.User.name.toUpperCase() : (event.User.name.toUpperCase || 'Event Organizer'); 
             const organizerEmail = (event.User && event.User.email) ? event.User.email : null;
             const organizerPhone = (event.User && event.User.phone) ? event.User.phone : null;
           %>

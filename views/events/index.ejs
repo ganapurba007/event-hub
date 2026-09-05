@@ -213,7 +213,7 @@
               </div>
 
               <!-- Organizer -->
-              <% const organizerName = (event.User && event.User.name) ? event.User.name : (event.organizer || null); %>
+              <% const organizerName = (event.User && event.User.name) ? event.User.name.toUpperCase() : (event.User.name.toUpperCase() || null); %>
               <% if (organizerName) { %>
               <div class="flex items-center text-gray-500 gap-2 pt-1">
                 <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
