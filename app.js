@@ -5,9 +5,30 @@ const { Sequelize, DataTypes, Op } = require("sequelize");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
 const env = process.env;
 const app = express();
 const port = env.PORT;
+
+// Multer File Upload Configuration
+const uploadDir = path.join(__dirname, "public", "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, "event-" + uniqueSuffix + ext);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // MIDDLEWARE
 app.use(express.urlencoded({ extended: true }));
@@ -357,6 +378,11 @@ app.get("/events", async (req, res) => {
       cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"];
     }
 
+    const message = req.session.message || null;
+    const error = req.session.error || null;
+    delete req.session.message;
+    delete req.session.error;
+
     res.render("events/index", {
       user: req.session.user,
       events,
@@ -365,13 +391,123 @@ app.get("/events", async (req, res) => {
       selectedCategory: category,
       selectedCity: city,
       searchQuery: search,
+      message,
+      error,
     });
   } catch (error) {
     console.error("Error fetching events:", error);
     res.status(500).send("Internal Server Error");
   }
 });
-// END EVENTS
+
+// CREATE EVENT PAGE (GET)
+app.get("/events/create", requiredAuth, requiredCreator, async (req, res) => {
+  try {
+    const categories = await Category.findAll();
+    res.render("events/create", {
+      user: req.session.user,
+      categories,
+      error: [],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END CREATE EVENT
+
+// MY EVENT
+app.get("/my-event", requiredAuth, requiredCreator, async (req, res) => {
+  try {
+    const events = await Event.findAll({
+      where: { creator_id: req.session.user.id },
+      include: [Category],
+      order: [["created_at", "DESC"]],
+    });
+    res.render("events/my-event", {
+      user: req.session.user,
+      events,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END MY EVENT
+
+// LOGIC CREATE EVENT
+const handleCreateEvent = async (req, res) => {
+  try {
+    const {
+      title,
+      category_id,
+      description,
+      event_date,
+      event_end_date,
+      venue,
+      city,
+      price,
+      available_tickets,
+      max_attendees,
+      image_path,
+    } = req.body;
+
+    let finalImagePath = image_path || "/images/placeholder.jpg";
+    if (req.file) {
+      finalImagePath = "/uploads/" + req.file.filename;
+    }
+
+    const event = await Event.create({
+      title,
+      description,
+      image_path: finalImagePath,
+      venue,
+      event_date: event_date ? new Date(event_date) : new Date(),
+      event_end_date: event_end_date ? new Date(event_end_date) : new Date(),
+      max_attendees: parseInt(max_attendees) || 100,
+      price: parseFloat(price) || 0,
+      available_tickets: parseInt(available_tickets) || 100,
+      city,
+      category_id: parseInt(category_id),
+      creator_id: req.session.user.id,
+      is_published: true,
+    });
+
+    req.session.message = "Event created successfully";
+    res.redirect(`/events/${event.id}`);
+  } catch (error) {
+    console.error("Error creating event:", error);
+    try {
+      const categories = await Category.findAll();
+      res.render("events/create", {
+        user: req.session.user,
+        categories,
+        error: [
+          "Failed to create event. Please check all required fields and try again.",
+        ],
+        formData: req.body,
+      });
+    } catch (renderErr) {
+      res.status(500).send("Internal Server Error");
+    }
+  }
+};
+
+app.post(
+  "/events/create",
+  requiredAuth,
+  requiredCreator,
+  upload.single("image"),
+  handleCreateEvent,
+);
+app.post(
+  "/events",
+  requiredAuth,
+  requiredCreator,
+  upload.single("image"),
+  handleCreateEvent,
+);
+// END LOGIC CREATE EVENT
 
 // DETAIL
 app.get("/events/:id", async (req, res) => {
@@ -382,9 +518,16 @@ app.get("/events/:id", async (req, res) => {
     if (!event) {
       return res.status(404).send("Event not found");
     }
+    const message = req.session.message || null;
+    const error = req.session.error || null;
+    delete req.session.message;
+    delete req.session.error;
+
     res.render("events/detail", {
       user: req.session.user,
       event,
+      message,
+      error,
     });
   } catch (error) {
     console.log(error);
@@ -638,9 +781,16 @@ app.get("/my-orders", requiredAuth, async (req, res) => {
       ],
       order: [["created_at", "DESC"]],
     });
+    const message = req.session.message || null;
+    const error = req.session.error || null;
+    delete req.session.message;
+    delete req.session.error;
+
     res.render("orders/my-orders", {
       user: req.session.user,
       orders,
+      message,
+      error,
     });
   } catch (error) {
     console.log(error);
@@ -648,6 +798,39 @@ app.get("/my-orders", requiredAuth, async (req, res) => {
   }
 });
 // END MY ORDER PAGE
+
+// MY EVENTS PAGE (Creator Only)
+app.get("/my-events", requiredAuth, requiredCreator, async (req, res) => {
+  try {
+    const events = await Event.findAll({
+      where: { creator_id: req.session.user.id },
+      include: [
+        Category,
+        {
+          model: Order,
+          required: false,
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    const message = req.session.message || null;
+    const error = req.session.error || null;
+    delete req.session.message;
+    delete req.session.error;
+
+    res.render("events/my-events", {
+      user: req.session.user,
+      events,
+      message,
+      error,
+    });
+  } catch (error) {
+    console.error("Error fetching my-events:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// END MY EVENTS PAGE
 
 // END CONTROLLERS
 

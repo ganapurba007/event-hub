@@ -18,26 +18,7 @@
         </p>
       </div>
 
-      <!-- ERROR ALERT BANNER -->
-      <% if (typeof error !== 'undefined' && error && ((Array.isArray(error) && error.length > 0) || typeof error === 'string')) { %>
-      <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs sm:text-sm flex items-start gap-3">
-        <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="space-y-1">
-          <h4 class="font-bold">Registration Error</h4>
-          <% if (Array.isArray(error)) { %>
-          <ul class="list-disc list-inside space-y-0.5">
-            <% error.forEach(msg => { %>
-            <li><%= msg %></li>
-            <% }); %>
-          </ul>
-          <% } else { %>
-          <p><%= error %></p>
-          <% } %>
-        </div>
-      </div>
-      <% } %>
+      <%- include('../../partials/alert'); %>
 
       <!-- REGISTER FORM -->
       <form action="/register" method="POST" class="space-y-5">
