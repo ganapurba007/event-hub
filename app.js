@@ -509,6 +509,104 @@ app.post(
 );
 // END LOGIC CREATE EVENT
 
+// EDIT EVENT PAGE (GET)
+app.get("/events/:id/edit", requiredAuth, requiredCreator, async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).send("Event not found");
+    }
+    if (event.creator_id !== req.session.user.id) {
+      req.session.error = "You are not authorized to edit this event";
+      return res.redirect("/my-events");
+    }
+    const categories = await Category.findAll();
+    const message = req.session.message || null;
+    const error = req.session.error || null;
+    delete req.session.message;
+    delete req.session.error;
+
+    res.render("events/edit", {
+      user: req.session.user,
+      event,
+      categories,
+      message,
+      error,
+    });
+  } catch (error) {
+    console.error("Error fetching event for edit:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// LOGIC EDIT EVENT (POST)
+app.post("/events/:id/edit", requiredAuth, requiredCreator, upload.single("image"), async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).send("Event not found");
+    }
+    if (event.creator_id !== req.session.user.id) {
+      req.session.error = "You are not authorized to edit this event";
+      return res.redirect("/my-events");
+    }
+
+    const {
+      title,
+      category_id,
+      description,
+      event_date,
+      event_end_date,
+      venue,
+      city,
+      price,
+      available_tickets,
+      max_attendees,
+      image_path,
+    } = req.body;
+
+    let finalImagePath = event.image_path;
+    if (req.file) {
+      finalImagePath = "/uploads/" + req.file.filename;
+    } else if (image_path && image_path.trim() !== '') {
+      finalImagePath = image_path.trim();
+    }
+
+    await event.update({
+      title,
+      description,
+      image_path: finalImagePath,
+      venue,
+      event_date: event_date ? new Date(event_date) : event.event_date,
+      event_end_date: event_end_date ? new Date(event_end_date) : event.event_end_date,
+      max_attendees: parseInt(max_attendees) || event.max_attendees,
+      price: parseFloat(price) >= 0 ? parseFloat(price) : event.price,
+      available_tickets: parseInt(available_tickets) >= 0 ? parseInt(available_tickets) : event.available_tickets,
+      city,
+      category_id: parseInt(category_id) || event.category_id,
+    });
+
+    req.session.message = "Event updated successfully!";
+    res.redirect("/my-events");
+  } catch (error) {
+    console.error("Error updating event:", error);
+    try {
+      const event = await Event.findByPk(req.params.id);
+      const categories = await Category.findAll();
+      res.render("events/edit", {
+        user: req.session.user,
+        event: Object.assign({}, event ? event.toJSON() : {}, req.body),
+        categories,
+        error: ["Failed to update event. Please check required fields."],
+        message: null,
+      });
+    } catch (err) {
+      res.status(500).send("Internal Server Error");
+    }
+  }
+});
+// END EDIT EVENT
+
 // DETAIL
 app.get("/events/:id", async (req, res) => {
   try {
