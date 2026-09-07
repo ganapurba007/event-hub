@@ -957,10 +957,52 @@ async function ensureDatabaseExists() {
   await connection.end();
 }
 
+// Clean up duplicate index keys created by previous sequelize alter: true
+async function cleanupDuplicateIndexes() {
+  const host = env.DB_HOST || "127.0.0.1";
+  const port = env.DB_PORT || 3306;
+  const user = env.DB_USERNAME || "root";
+  const password = env.DB_PASSWORD || "";
+  const databaseName = env.DB_NAME || "event-management";
+
+  try {
+    const connection = await mysql.createConnection({
+      host,
+      port,
+      user,
+      password,
+      database: databaseName,
+    });
+
+    const [rows] = await connection.query(`
+      SELECT DISTINCT INDEX_NAME 
+      FROM information_schema.STATISTICS 
+      WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'user' AND INDEX_NAME != 'PRIMARY'
+    `, [databaseName]);
+
+    if (rows.length > 1) {
+      // Keep first index, drop duplicate extra indexes (e.g. email_2, email_3 ... email_64)
+      const indexesToDrop = rows.slice(1);
+      for (const row of indexesToDrop) {
+        try {
+          await connection.query(`ALTER TABLE \`user\` DROP INDEX \`${row.INDEX_NAME}\`;`);
+        } catch (e) {
+          // ignore drop errors if index already removed
+        }
+      }
+      console.log(`Cleaned up ${indexesToDrop.length} duplicate index(es) from user table.`);
+    }
+
+    await connection.end();
+  } catch (err) {
+    // Ignore if table does not exist yet
+  }
+}
+
 // Sync table model
 async function syncDatabase() {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log("Database synced successfully");
   } catch (err) {
     console.error("Error syncing database:", err);
@@ -972,6 +1014,7 @@ async function startServer() {
   try {
     // Auto-create database if MySQL service is running
     await ensureDatabaseExists();
+    await cleanupDuplicateIndexes();
 
     await sequelize.authenticate();
     console.log("Database connection has been established successfully.");
