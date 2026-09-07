@@ -1,0 +1,353 @@
+<%- include('../../partials/header'); %>
+
+<!-- Custom Style for Print View -->
+<style>
+  @media print {
+    header, footer, nav, .no-print {
+      display: none !important;
+    }
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    .print-container {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+    .print-card {
+      border: 1px solid #e5e7eb !important;
+      box-shadow: none !important;
+      break-inside: avoid;
+    }
+  }
+</style>
+
+<!-- ==================== MAIN SUCCESS CONTAINER ==================== -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl print-container">
+
+  <!-- BREADCRUMB & HEADER -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 no-print">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+        <a href="/" class="hover:text-primary transition-colors">Home</a>
+        <span>/</span>
+        <a href="/my-orders" class="hover:text-primary transition-colors">My Orders</a>
+        <span>/</span>
+        <span class="text-primary font-bold">Order Success</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+        <span class="w-3.5 h-8 bg-emerald-500 rounded-full inline-block"></span>
+        Order Confirmation & E-Ticket
+      </h1>
+    </div>
+
+    <!-- Quick Action Navigation -->
+    <div class="flex items-center gap-2.5">
+      <button onclick="window.print()" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer">
+        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        <span>Print Ticket</span>
+      </button>
+
+      <a href="/my-orders" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z" />
+        </svg>
+        <span>My Orders</span>
+      </a>
+    </div>
+  </div>
+
+  <% if (typeof order !== 'undefined' && order) { %>
+    <% 
+      const event = order.Event || {};
+      const tickets = order.Tickets || [];
+      const categoryName = (event.Category && event.Category.name) ? event.Category.name : 'Event';
+      const organizerName = (event.User && event.User.name) ? event.User.name : 'Event Hub Organizer';
+      const orderStatus = (order.status || 'paid').toLowerCase();
+      const isPaid = (orderStatus === 'paid' || orderStatus === 'completed' || orderStatus === 'success');
+    %>
+
+    <!-- SUCCESS HERO HEADER CARD -->
+    <div class="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-3xl p-6 sm:p-8 shadow-xl mb-8 relative overflow-hidden print-card">
+      <!-- Decorative background shapes -->
+      <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -left-10 -top-10 w-48 h-48 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex items-start sm:items-center gap-4">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center shrink-0 border border-white/30 shadow-inner">
+            <svg class="w-10 h-10 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div class="space-y-1">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/40 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-emerald-100 border border-white/20">
+              <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+              Payment Confirmed
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Payment Successful!</h2>
+            <p class="text-emerald-100 text-xs sm:text-sm max-w-xl">
+              Thank you! Your order has been confirmed. Please present this E-Ticket or bring a printed copy when attending the event.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-left md:text-right shrink-0">
+          <span class="text-[11px] uppercase tracking-wider text-emerald-200 font-bold block">Order Reference</span>
+          <span class="text-lg font-mono font-extrabold text-white tracking-wider block">#<%= order.id %></span>
+          <span class="text-xs text-emerald-100 font-medium">
+            <%= order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-' %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN TWO COLUMN GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- LEFT COLUMN: EVENT INFO & E-TICKETS (8 COLS) -->
+      <div class="lg:col-span-8 space-y-6">
+
+        <!-- EVENT DETAIL SUMMARY CARD -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-accent/40 shadow-xl shadow-gray-200/40 print-card space-y-6">
+          <div class="flex flex-col sm:flex-row items-start gap-5">
+            <!-- Event Poster -->
+            <div class="w-full sm:w-40 h-44 rounded-2xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 shadow-md relative">
+              <img src="<%= (event.image_path) ? event.image_path : '/images/placeholder.jpg' %>" alt="<%= (event.title) ? event.title : 'Event' %>" class="w-full h-full object-cover" />
+              <div class="absolute top-2.5 left-2.5 px-2.5 py-0.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-extrabold uppercase rounded-lg">
+                <%= categoryName %>
+              </div>
+            </div>
+
+            <!-- Event Header Info -->
+            <div class="space-y-3 flex-grow">
+              <div class="space-y-1">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 leading-snug">
+                  <%= event.title || 'Event Title' %>
+                </h3>
+                <p class="text-xs text-gray-500 font-medium">
+                  Organized by <strong class="text-gray-800 font-bold"><%= organizerName %></strong>
+                </p>
+              </div>
+
+              <!-- Date & Location -->
+              <div class="space-y-2 text-xs sm:text-sm text-gray-600 font-medium bg-bg-base/50 rounded-2xl p-3.5 border border-gray-100">
+                <div class="flex items-center gap-2.5 text-gray-800 font-semibold">
+                  <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span><%= (event.event_date) ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'TBA' %></span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <svg class="w-4 h-4 text-primary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span><%= event.venue || 'Venue Location' %>, <strong class="text-gray-800"><%= event.city || 'Indonesia' %></strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- E-TICKET CARDS LIST -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between px-1">
+            <h3 class="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z" />
+              </svg>
+              Issued E-Tickets (<%= tickets.length > 0 ? tickets.length : order.quantity %>)
+            </h3>
+            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">Ready for Entry</span>
+          </div>
+
+          <% if (tickets && tickets.length > 0) { %>
+            <% tickets.forEach((ticket, idx) => { %>
+              <!-- INDIVIDUAL TICKET TICKET VOUCHER -->
+              <div class="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden print-card relative">
+                <!-- Top Header Strip -->
+                <div class="bg-gradient-to-r from-primary to-secondary px-6 py-3 text-white flex items-center justify-between text-xs font-bold tracking-wider uppercase">
+                  <span>E-TICKET VOUCHER #<%= idx + 1 %></span>
+                  <span><%= categoryName %></span>
+                </div>
+
+                <!-- Main Ticket Body -->
+                <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+
+                  <!-- Attendee Details (7 cols) -->
+                  <div class="md:col-span-7 space-y-4 border-b md:border-b-0 md:border-r border-dashed border-gray-200 pb-4 md:pb-0 md:pr-6">
+                    <div>
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Ticket Code</span>
+                      <span class="text-lg font-mono font-black text-primary tracking-widest block"><%= ticket.ticket_code %></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Attendee Name</span>
+                        <span class="font-bold text-gray-800 block truncate"><%= ticket.attendee_name || 'Attendee' %></span>
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Contact Email</span>
+                        <span class="font-semibold text-gray-700 block truncate"><%= ticket.attendee_email || '-' %></span>
+                      </div>
+                    </div>
+
+                    <div class="bg-emerald-50/60 rounded-xl p-3 border border-emerald-100 text-[11px] text-emerald-800 flex items-start gap-2">
+                      <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Present this QR code to event staff at the venue to scan during check-in.</span>
+                    </div>
+                  </div>
+
+                  <!-- QR Code & Barcode Display (5 cols) -->
+                  <div class="md:col-span-5 flex flex-col items-center justify-center space-y-3 text-center">
+                    <!-- Dynamic QR Code Image -->
+                    <div class="w-36 h-36 bg-white p-2 border-2 border-gray-800 rounded-2xl shadow-inner flex items-center justify-center">
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(ticket.barcode_data || ticket.ticket_code) %>" alt="QR Code" class="w-full h-full object-contain" />
+                    </div>
+                    <div class="space-y-0.5">
+                      <span class="text-[11px] font-mono text-gray-500 font-bold tracking-wider block"><%= ticket.ticket_code %></span>
+                      <span class="text-[9px] uppercase tracking-widest text-emerald-600 font-bold block">★ Valid & Confirmed ★</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <!-- FALLBACK IF TICKET RECORDS ARE NOT EXPLICITLY GENERATED -->
+            <div class="bg-white rounded-3xl border border-gray-200 shadow-xl p-6 print-card relative">
+              <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-3 flex-grow">
+                  <div class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase">
+                    <%= order.quantity %> x Ticket(s) Issued
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Attendee Name</span>
+                    <span class="text-base font-bold text-gray-900"><%= order.attendee_name || (user && user.name) || 'Attendee' %></span>
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Attendee Contact</span>
+                    <span class="text-xs font-semibold text-gray-700"><%= order.attendee_email || (user && user.email) || '-' %></span>
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-center text-center space-y-2">
+                  <div class="w-32 h-32 bg-white p-2 border-2 border-gray-800 rounded-2xl">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent('ORDER-' + order.id) %>" alt="QR Code" class="w-full h-full object-contain" />
+                  </div>
+                  <span class="text-[10px] font-mono font-bold text-gray-600">ORDER-<%= order.id %></span>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: PAYMENT SUMMARY & ACTIONS (4 COLS) -->
+      <div class="lg:col-span-4 space-y-6">
+
+        <!-- PAYMENT DETAILS CARD -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-accent/40 shadow-xl shadow-gray-200/40 print-card space-y-6">
+          <div class="border-b border-gray-100 pb-4">
+            <h3 class="text-lg font-extrabold text-gray-900">Payment Summary</h3>
+            <p class="text-xs text-gray-500 mt-0.5">Summary of your e-ticket purchase</p>
+          </div>
+
+          <div class="space-y-3.5 text-xs font-medium">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-50">
+              <span class="text-gray-500">Payment Status</span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                PAID
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Order Number</span>
+              <span class="font-mono font-bold text-gray-900">#<%= order.id %></span>
+            </div>
+
+            <% if (order.xendit_invoice_id) { %>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Invoice Ref</span>
+              <span class="font-mono text-gray-700 truncate max-w-[140px]" title="<%= order.xendit_invoice_id %>"><%= order.xendit_invoice_id %></span>
+            </div>
+            <% } %>
+
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Ticket Quantity</span>
+              <span class="font-bold text-gray-900"><%= order.quantity %> Ticket(s)</span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Price per Ticket</span>
+              <span class="font-semibold text-gray-700">Rp<%= Number(event.price || 0).toLocaleString('id-ID') %></span>
+            </div>
+
+            <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
+              <span class="font-bold text-gray-900">Total Paid</span>
+              <span class="text-xl font-extrabold text-primary">Rp<%= Number(order.total_amount || 0).toLocaleString('id-ID') %></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS CARD (NO PRINT) -->
+        <div class="bg-white rounded-3xl p-6 border border-accent/40 shadow-xl shadow-gray-200/40 no-print space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400">Next Steps</h4>
+
+          <button onclick="window.print()" class="w-full py-3.5 px-4 bg-primary hover:bg-secondary text-white font-extrabold text-sm rounded-2xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            <span>Print / Save E-Ticket</span>
+          </button>
+
+          <a href="/my-orders" class="w-full py-3.5 px-4 bg-bg-base/80 hover:bg-bg-base text-gray-800 font-bold text-sm rounded-2xl border border-gray-200 transition-all duration-200 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m7-7l-7 7 7 7" />
+            </svg>
+            <span>View My Orders</span>
+          </a>
+
+          <a href="/events" class="w-full py-3 px-4 text-primary hover:text-secondary font-bold text-xs text-center block transition-colors">
+            + Explore More Events
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+  <% } else { %>
+    <!-- NO ORDER FOUND FALLBACK CARD -->
+    <div class="bg-white rounded-3xl p-8 text-center max-w-md mx-auto border border-gray-200 shadow-xl space-y-5 my-12">
+      <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-xl font-extrabold text-gray-900">Order Details Not Found</h3>
+        <p class="text-xs text-gray-500 leading-relaxed">
+          We could not find matching order details. Please check your order history under My Orders.
+        </p>
+      </div>
+      <a href="/my-orders" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white font-extrabold text-xs px-6 py-3 rounded-2xl shadow-md transition-all">
+        Go to My Orders
+      </a>
+    </div>
+  <% } %>
+
+</main>
+
+<%- include('../../partials/footer'); %>

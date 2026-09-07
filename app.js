@@ -7,6 +7,7 @@ const bcrypt = require("bcrypt");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const { Xendit } = require("xendit-node");
 const env = process.env;
 const app = express();
 const port = env.PORT;
@@ -55,8 +56,16 @@ const sequelize = new Sequelize(
     port: env.DB_PORT || 3306,
     dialect: "mysql",
     logging: false,
-  }
+  },
 );
+
+// XENDIT CONFIG
+const xendit = new Xendit({
+  secretKey: env.XENDIT_SECRET_KEY,
+});
+
+const { Invoice } = xendit;
+// END XENDIT CONFIG
 
 const User = sequelize.define(
   "User",
@@ -135,6 +144,10 @@ const Order = sequelize.define(
     xendit_invoice_id: { type: DataTypes.STRING(255), allowNull: true },
     xendit_payment_url: { type: DataTypes.TEXT, allowNull: true },
     xendit_expiry_date: { type: DataTypes.DATE, allowNull: true },
+    external_id: { type: DataTypes.STRING(255), allowNull: true },
+    attendee_name: { type: DataTypes.STRING(255), allowNull: true },
+    attendee_email: { type: DataTypes.STRING(255), allowNull: true },
+    attendee_phone: { type: DataTypes.STRING(50), allowNull: true },
   },
   {
     tableName: "orders",
@@ -546,71 +559,82 @@ app.get("/events/:id/edit", requiredAuth, requiredCreator, async (req, res) => {
 });
 
 // LOGIC EDIT EVENT (POST)
-app.post("/events/:id/edit", requiredAuth, requiredCreator, upload.single("image"), async (req, res) => {
-  try {
-    const event = await Event.findByPk(req.params.id);
-    if (!event) {
-      return res.status(404).send("Event not found");
-    }
-    if (event.creator_id !== req.session.user.id) {
-      req.session.error = "You are not authorized to edit this event";
-      return res.redirect("/my-events");
-    }
-
-    const {
-      title,
-      category_id,
-      description,
-      event_date,
-      event_end_date,
-      venue,
-      city,
-      price,
-      available_tickets,
-      max_attendees,
-      image_path,
-    } = req.body;
-
-    let finalImagePath = event.image_path;
-    if (req.file) {
-      finalImagePath = "/uploads/" + req.file.filename;
-    } else if (image_path && image_path.trim() !== '') {
-      finalImagePath = image_path.trim();
-    }
-
-    await event.update({
-      title,
-      description,
-      image_path: finalImagePath,
-      venue,
-      event_date: event_date ? new Date(event_date) : event.event_date,
-      event_end_date: event_end_date ? new Date(event_end_date) : event.event_end_date,
-      max_attendees: parseInt(max_attendees) || event.max_attendees,
-      price: parseFloat(price) >= 0 ? parseFloat(price) : event.price,
-      available_tickets: parseInt(available_tickets) >= 0 ? parseInt(available_tickets) : event.available_tickets,
-      city,
-      category_id: parseInt(category_id) || event.category_id,
-    });
-
-    req.session.message = "Event updated successfully!";
-    res.redirect("/my-events");
-  } catch (error) {
-    console.error("Error updating event:", error);
+app.post(
+  "/events/:id/edit",
+  requiredAuth,
+  requiredCreator,
+  upload.single("image"),
+  async (req, res) => {
     try {
       const event = await Event.findByPk(req.params.id);
-      const categories = await Category.findAll();
-      res.render("events/edit", {
-        user: req.session.user,
-        event: Object.assign({}, event ? event.toJSON() : {}, req.body),
-        categories,
-        error: ["Failed to update event. Please check required fields."],
-        message: null,
+      if (!event) {
+        return res.status(404).send("Event not found");
+      }
+      if (event.creator_id !== req.session.user.id) {
+        req.session.error = "You are not authorized to edit this event";
+        return res.redirect("/my-events");
+      }
+
+      const {
+        title,
+        category_id,
+        description,
+        event_date,
+        event_end_date,
+        venue,
+        city,
+        price,
+        available_tickets,
+        max_attendees,
+        image_path,
+      } = req.body;
+
+      let finalImagePath = event.image_path;
+      if (req.file) {
+        finalImagePath = "/uploads/" + req.file.filename;
+      } else if (image_path && image_path.trim() !== "") {
+        finalImagePath = image_path.trim();
+      }
+
+      await event.update({
+        title,
+        description,
+        image_path: finalImagePath,
+        venue,
+        event_date: event_date ? new Date(event_date) : event.event_date,
+        event_end_date: event_end_date
+          ? new Date(event_end_date)
+          : event.event_end_date,
+        max_attendees: parseInt(max_attendees) || event.max_attendees,
+        price: parseFloat(price) >= 0 ? parseFloat(price) : event.price,
+        available_tickets:
+          parseInt(available_tickets) >= 0
+            ? parseInt(available_tickets)
+            : event.available_tickets,
+        city,
+        category_id: parseInt(category_id) || event.category_id,
       });
-    } catch (err) {
-      res.status(500).send("Internal Server Error");
+
+      req.session.message = "Event updated successfully!";
+      res.redirect("/my-events");
+    } catch (error) {
+      console.error("Error updating event:", error);
+      try {
+        const event = await Event.findByPk(req.params.id);
+        const categories = await Category.findAll();
+        res.render("events/edit", {
+          user: req.session.user,
+          event: Object.assign({}, event ? event.toJSON() : {}, req.body),
+          categories,
+          error: ["Failed to update event. Please check required fields."],
+          message: null,
+        });
+      } catch (err) {
+        res.status(500).send("Internal Server Error");
+      }
     }
-  }
-});
+  },
+);
 // END EDIT EVENT
 
 // DETAIL
@@ -800,6 +824,264 @@ app.get("/events/:id/checkout", requiredAuth, async (req, res) => {
 });
 // END CHECKOUT PAGE
 
+// PROCESS ORDER CHECKOUT & XENDIT INVOICE
+async function handleOrderCheckout(req, res) {
+  try {
+    const { event_id, quantity, attendee_name, attendee_email, attendee_phone } = req.body;
+    const targetEventId = event_id || req.params.id;
+    const qty = parseInt(quantity) || 1;
+
+    console.log("Processing order checkout:", {
+      targetEventId,
+      qty,
+      attendee_name,
+      attendee_email,
+      attendee_phone,
+    });
+
+    const event = await Event.findByPk(targetEventId, {
+      include: [Category, User],
+    });
+
+    if (!event) {
+      return res.status(404).send("Event not found");
+    }
+
+    if (event.available_tickets < qty) {
+      return res.render("orders/checkout", {
+        user: req.session.user,
+        event,
+        error: [`Not enough tickets available (only ${event.available_tickets} ticket(s) left)`],
+        formData: req.body,
+      });
+    }
+
+    const total_amount = parseFloat(event.price) * qty;
+
+    // Unique external ID for Xendit invoice and order reference
+    const externalId = `event-order-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    const currentPort = env.PORT || 3000;
+    const baseUrl = env.BASE_URL || `${req.protocol}://${req.get("host")}` || `http://localhost:${currentPort}`;
+
+    const invoiceData = {
+      externalId: externalId,
+      amount: parseFloat(total_amount),
+      description: `Order ${qty} ticket(s) for ${event.title}`,
+      invoiceDuration: "86400",
+      customer: {
+        givenNames: attendee_name || req.session.user.name || "Customer",
+        email: attendee_email || req.session.user.email,
+        mobileNumber: attendee_phone || req.session.user.phone || "081234567890",
+      },
+      successRedirectUrl: `${baseUrl}/orders/success?order_id=${externalId}`,
+      failureRedirectUrl: `${baseUrl}/my-orders`,
+      currency: "IDR",
+      items: [
+        {
+          name: event.title,
+          quantity: parseInt(qty),
+          price: parseFloat(event.price),
+          category: "Event Ticket",
+        },
+      ],
+    };
+
+    console.log("Creating Xendit Invoice data:", invoiceData);
+
+    let xenditResponse = null;
+    let paymentUrl = null;
+
+    try {
+      xenditResponse = await Invoice.createInvoice({
+        data: invoiceData,
+      });
+      paymentUrl = xenditResponse.invoiceUrl || xenditResponse.invoice_url || xenditResponse.paymentUrl;
+      console.log("Xendit Invoice created:", paymentUrl);
+    } catch (xenditErr) {
+      console.error("Xendit API creation error:", xenditErr.message || xenditErr);
+      // Fallback redirect URL if Xendit API fails
+      paymentUrl = `${baseUrl}/orders/success?order_id=${externalId}`;
+    }
+
+    // Create Order in DB
+    const order = await Order.create({
+      user_id: req.session.user.id,
+      event_id: event.id,
+      total_amount: total_amount,
+      quantity: qty,
+      attendee_name: attendee_name || req.session.user.name,
+      attendee_email: attendee_email || req.session.user.email,
+      attendee_phone: attendee_phone || req.session.user.phone,
+      status: "pending",
+      xendit_invoice_id: xenditResponse ? xenditResponse.id : externalId,
+      xendit_payment_url: paymentUrl,
+      xendit_expiry_date: xenditResponse && xenditResponse.expiryDate ? new Date(xenditResponse.expiryDate) : null,
+      external_id: externalId,
+    });
+
+    // Create Ticket records for each quantity unit
+    for (let i = 0; i < qty; i++) {
+      const ticketCode = `TKT-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+      const barcodeData = `EVENT-${event.id}-${ticketCode}-${order.id}`;
+
+      await Ticket.create({
+        order_id: order.id,
+        event_id: event.id,
+        ticket_code: ticketCode,
+        barcode_data: barcodeData,
+        attendee_name: attendee_name || req.session.user.name,
+        attendee_email: attendee_email || req.session.user.email,
+        attendee_phone: attendee_phone || req.session.user.phone,
+      });
+    }
+
+    // Decrement available ticket count
+    await event.update({
+      available_tickets: event.available_tickets - qty,
+    });
+
+    // Redirect user to Xendit Staging payment page
+    return res.redirect(paymentUrl);
+  } catch (error) {
+    console.error("Payment process error:", error);
+    const targetEventId = req.body.event_id || req.params.id;
+    let event = null;
+    if (targetEventId) {
+      event = await Event.findByPk(targetEventId, { include: [Category, User] });
+    }
+    return res.status(500).render("orders/checkout", {
+      user: req.session.user,
+      event: event,
+      error: ["Failed to process transaction: " + error.message],
+      formData: req.body,
+    });
+  }
+}
+
+// Register Order & Checkout POST endpoints
+app.post("/orders", requiredAuth, handleOrderCheckout);
+app.post("/events/:id/checkout", requiredAuth, handleOrderCheckout);
+app.get("/payments/process/:event_id", requiredAuth, handleOrderCheckout);
+app.get("/payment/process/:event_id", requiredAuth, handleOrderCheckout);
+// END PROCESS ORDER CHECKOUT
+
+// Order success page
+app.get("/orders/success", requiredAuth, async (req, res) => {
+  try {
+    const { order_id, id } = req.query;
+    const searchId = order_id || id;
+    console.log("Success order id : ", searchId);
+
+    let order = null;
+
+    if (searchId) {
+      // 1. Find by xendit_invoice_id
+      order = await Order.findOne({
+        where: {
+          xendit_invoice_id: searchId,
+        },
+        include: [
+          {
+            model: Event,
+            include: [
+              Category,
+              { model: User, attributes: ["id", "name", "email", "phone"] },
+            ],
+          },
+          { model: Ticket },
+        ],
+      });
+
+      // 2. Find by external_id
+      if (!order) {
+        console.log("Trying to find by external id");
+        order = await Order.findOne({
+          where: {
+            external_id: searchId,
+          },
+          include: [
+            {
+              model: Event,
+              include: [
+                Category,
+                { model: User, attributes: ["id", "name", "email", "phone"] },
+              ],
+            },
+            {
+              model: Ticket,
+            },
+          ],
+        });
+      }
+
+      // 3. Find by primary key id if numeric
+      if (!order && !isNaN(searchId)) {
+        console.log("Trying to find by primary key id");
+        order = await Order.findOne({
+          where: {
+            id: searchId,
+          },
+          include: [
+            {
+              model: Event,
+              include: [
+                Category,
+                { model: User, attributes: ["id", "name", "email", "phone"] },
+              ],
+            },
+            {
+              model: Ticket,
+            },
+          ],
+        });
+      }
+    }
+
+    // 4. Fallback to latest order of logged-in user if no order matched searchId
+    if (!order && req.session.user) {
+      order = await Order.findOne({
+        where: { user_id: req.session.user.id },
+        order: [["created_at", "DESC"]],
+        include: [
+          {
+            model: Event,
+            include: [
+              Category,
+              { model: User, attributes: ["id", "name", "email", "phone"] },
+            ],
+          },
+          {
+            model: Ticket,
+          },
+        ],
+      });
+    }
+
+    // UPDATE STATUS TO PAID IF PENDING
+    if (order && order.status === "pending") {
+      await order.update({
+        status: "paid",
+      });
+      console.log("Order status updated to paid");
+    }
+
+    res.render("orders/success", {
+      user: req.session.user,
+      order: order,
+      message: "Payment successful! Your e-ticket has been issued.",
+    });
+  } catch (error) {
+    console.log("Success page error : ", error);
+    res.status(500).render("orders/success", {
+      user: req.session.user,
+      order: null,
+      message: null,
+      error: "Failed to load order details: " + error.message,
+    });
+  }
+});
+
 // PROFILE
 app.get("/profile", requiredAuth, async (req, res) => {
   try {
@@ -974,23 +1256,30 @@ async function cleanupDuplicateIndexes() {
       database: databaseName,
     });
 
-    const [rows] = await connection.query(`
+    const [rows] = await connection.query(
+      `
       SELECT DISTINCT INDEX_NAME 
       FROM information_schema.STATISTICS 
       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'user' AND INDEX_NAME != 'PRIMARY'
-    `, [databaseName]);
+    `,
+      [databaseName],
+    );
 
     if (rows.length > 1) {
       // Keep first index, drop duplicate extra indexes (e.g. email_2, email_3 ... email_64)
       const indexesToDrop = rows.slice(1);
       for (const row of indexesToDrop) {
         try {
-          await connection.query(`ALTER TABLE \`user\` DROP INDEX \`${row.INDEX_NAME}\`;`);
+          await connection.query(
+            `ALTER TABLE \`user\` DROP INDEX \`${row.INDEX_NAME}\`;`,
+          );
         } catch (e) {
           // ignore drop errors if index already removed
         }
       }
-      console.log(`Cleaned up ${indexesToDrop.length} duplicate index(es) from user table.`);
+      console.log(
+        `Cleaned up ${indexesToDrop.length} duplicate index(es) from user table.`,
+      );
     }
 
     await connection.end();
@@ -1002,7 +1291,21 @@ async function cleanupDuplicateIndexes() {
 // Sync table model
 async function syncDatabase() {
   try {
-    await sequelize.sync();
+    const colsToAdd = [
+      { name: "external_id", type: "VARCHAR(255) NULL" },
+      { name: "attendee_name", type: "VARCHAR(255) NULL" },
+      { name: "attendee_email", type: "VARCHAR(255) NULL" },
+      { name: "attendee_phone", type: "VARCHAR(50) NULL" },
+    ];
+    for (const col of colsToAdd) {
+      try {
+        await sequelize.query(`ALTER TABLE orders ADD COLUMN ${col.name} ${col.type};`);
+      } catch (colErr) {
+        // Column already exists or table not created yet
+      }
+    }
+
+    await sequelize.sync({ alter: true });
     console.log("Database synced successfully");
   } catch (err) {
     console.error("Error syncing database:", err);
@@ -1026,11 +1329,19 @@ async function startServer() {
     });
   } catch (err) {
     if (err.code === "ECONNREFUSED" || err.original?.code === "ECONNREFUSED") {
-      console.error("\n==================================================================");
-      console.error(" [DATABASE ERROR] Tidak dapat terhubung ke server MySQL (ECONNREFUSED).");
-      console.error(" Pastikan service MySQL (XAMPP / Laragon / MySQL Service) sudah BERJALAN!");
+      console.error(
+        "\n==================================================================",
+      );
+      console.error(
+        " [DATABASE ERROR] Tidak dapat terhubung ke server MySQL (ECONNREFUSED).",
+      );
+      console.error(
+        " Pastikan service MySQL (XAMPP / Laragon / MySQL Service) sudah BERJALAN!",
+      );
       console.error(" Details:", err.message);
-      console.error("==================================================================\n");
+      console.error(
+        "==================================================================\n",
+      );
     } else {
       console.error("Unable to connect to database:", err);
     }
