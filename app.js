@@ -1280,6 +1280,9 @@ app.get("/my-orders", requiredAuth, async (req, res) => {
             },
           ],
         },
+        {
+          model: Ticket,
+        },
       ],
       order: [["created_at", "DESC"]],
     });

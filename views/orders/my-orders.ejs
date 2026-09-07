@@ -1,5 +1,31 @@
 <%- include('../../partials/header'); %>
 
+<!-- Custom Print Style for Ticket Modal -->
+<style>
+  @media print {
+    body > *:not(#print-area) {
+      display: none !important;
+    }
+    #print-area {
+      display: block !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      background: white !important;
+      color: black !important;
+      padding: 20px !important;
+      margin: 0 !important;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+</style>
+
+<!-- Dedicated container for printable modal content -->
+<div id="print-area" class="hidden"></div>
+
 <!-- ==================== MAIN MY ORDERS CONTAINER ==================== -->
 <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
 
@@ -33,263 +59,358 @@
   <div class="space-y-6">
 
     <% if (typeof orders !== 'undefined' && orders && orders.length > 0) { %>
-    <% orders.forEach(order => { %>
-    <% 
-        const event = order.Event || {};
-        const categoryName = (event.Category && event.Category.name) ? event.Category.name : 'Event';
-        const organizerName = (event.User && event.User.name) ? event.User.name.toUpperCase() : 'Event Hub';
-        const orderStatus = (order.status || 'pending').toLowerCase();
-        
-        const isPaid = (orderStatus === 'paid' || orderStatus === 'completed' || orderStatus === 'success');
-        const isPending = (orderStatus === 'pending');
-        
-        let statusBadgeClass = "bg-amber-50 text-amber-700 border-amber-200";
-        let statusDotClass = "bg-amber-500";
-        
-        if (isPaid) {
-          statusBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
-          statusDotClass = "bg-emerald-500";
-        } else if (orderStatus === 'cancelled' || orderStatus === 'failed') {
-          statusBadgeClass = "bg-red-50 text-red-700 border-red-200";
-          statusDotClass = "bg-red-500";
-        }
-      %>
+      <% orders.forEach(order => { %>
+        <% 
+          const event = order.Event || {};
+          const tickets = order.Tickets || [];
+          const categoryName = (event.Category && event.Category.name) ? event.Category.name : 'Event';
+          const organizerName = (event.User && event.User.name) ? event.User.name : 'Event Hub Organizer';
+          const orderStatus = (order.status || 'pending').toLowerCase();
+          
+          const isPaid = (orderStatus === 'paid' || orderStatus === 'completed' || orderStatus === 'success');
+          const isPending = (orderStatus === 'pending');
+          const isFailed = (orderStatus === 'failed' || orderStatus === 'cancelled');
+          
+          let statusBadgeClass = "bg-amber-50 text-amber-700 border-amber-200";
+          let statusDotClass = "bg-amber-500";
+          
+          if (isPaid) {
+            statusBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+            statusDotClass = "bg-emerald-500";
+          } else if (isFailed) {
+            statusBadgeClass = "bg-red-50 text-red-700 border-red-200";
+            statusDotClass = "bg-red-500";
+          }
+        %>
 
-    <!-- ORDER ITEM CARD -->
-    <div class="bg-white rounded-3xl p-6 sm:p-7 border border-accent/40 shadow-lg shadow-gray-200/40 hover:shadow-xl transition-all duration-300 space-y-6">
+        <!-- ORDER ITEM CARD -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-accent/40 shadow-lg shadow-gray-200/40 hover:shadow-xl transition-all duration-300 space-y-6">
 
-      <!-- Order Header: ID, Date, Status -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100 text-xs font-semibold">
-        <div class="flex items-center gap-3 flex-wrap">
-          <span class="text-gray-500 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <%= order.created_at ? new Date(order.created_at).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '-' %>
-          </span>
-        </div>
-
-        <!-- Status Badge -->
-        <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider border self-start sm:self-auto <%= statusBadgeClass %>">
-          <span class="w-2 h-2 rounded-full <%= statusDotClass %> animate-pulse"></span>
-          <%= orderStatus.toUpperCase() %>
-        </span>
-      </div>
-
-      <!-- Main Content Grid: Event Poster & Details -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-
-        <!-- Left: Poster + Event Details -->
-        <div class="flex flex-col sm:flex-row items-start gap-5 flex-grow">
-          <!-- Event Image -->
-          <div class="w-full sm:w-36 h-36 rounded-2xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 shadow-sm relative group">
-            <img src="<%= (event.image_path) ? event.image_path : '/images/placeholder.jpg' %>" alt="<%= (event.title) ? event.title : 'Event' %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-            <div class="absolute top-2 left-2 px-2.5 py-0.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-extrabold uppercase rounded-lg">
-              <%= categoryName %>
-            </div>
-          </div>
-
-          <!-- Event Details -->
-          <div class="space-y-2 flex-grow">
-            <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 leading-snug">
-              <% if (event.id) { %>
-              <a href="/events/<%= event.id %>" class="hover:text-primary transition-colors">
-                <%= event.title %>
-              </a>
-              <% } else { %>
-              <%= event.title || 'Event' %>
-              <% } %>
-            </h3>
-
-            <!-- Schedule & Location -->
-            <div class="space-y-1.5 text-xs sm:text-sm text-gray-600 font-medium pt-1">
-              <p class="flex items-center gap-2 text-gray-800 font-semibold">
-                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Order Header: ID, Date, Status -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100 text-xs font-semibold">
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="font-mono font-bold text-gray-900 bg-gray-100 px-3 py-1 rounded-xl">Order #<%= order.id %></span>
+              <span class="text-gray-400">•</span>
+              <span class="text-gray-500 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span><%= (event.event_date) ? new Date(event.event_date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA' %></span>
-              </p>
-              <p class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span><%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong></span>
-              </p>
+                <%= order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-' %>
+              </span>
             </div>
 
-            <!-- Organizer Info -->
-            <p class="text-xs text-gray-400 font-semibold pt-1">
-              Organized by: <span class="text-gray-700 font-bold"><%= organizerName %></span>
-            </p>
+            <!-- Status Badge -->
+            <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider border self-start sm:self-auto <%= statusBadgeClass %>">
+              <span class="w-2 h-2 rounded-full <%= statusDotClass %> animate-pulse"></span>
+              <%= orderStatus.toUpperCase() %>
+            </span>
           </div>
-        </div>
 
-        <!-- Right: Quantity & Pricing Summary -->
-        <div class="flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end justify-between gap-4 border-t lg:border-t-0 border-gray-100 pt-4 lg:pt-0 shrink-0">
-          <div class="text-left sm:text-right space-y-1">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Price Paid</span>
-            <div class="text-2xl font-extrabold text-primary tracking-tight">
-              <%= Number(order.total_amount || 0) === 0 ? 'Free' : ('Rp' + Number(order.total_amount).toLocaleString('id-ID')) %>
+          <!-- Main Content Grid: Event Poster & Details -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+
+            <!-- Left: Poster + Event Details -->
+            <div class="flex flex-col sm:flex-row items-start gap-5 flex-grow">
+              <!-- Event Image -->
+              <div class="w-full sm:w-36 h-36 rounded-2xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 shadow-sm relative group">
+                <img src="<%= (event.image_path) ? event.image_path : '/images/placeholder.jpg' %>" alt="<%= (event.title) ? event.title : 'Event' %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div class="absolute top-2 left-2 px-2.5 py-0.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-extrabold uppercase rounded-lg">
+                  <%= categoryName %>
+                </div>
+              </div>
+
+              <!-- Event Details -->
+              <div class="space-y-2 flex-grow">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 leading-snug">
+                  <% if (event.id) { %>
+                  <a href="/events/<%= event.id %>" class="hover:text-primary transition-colors">
+                    <%= event.title %>
+                  </a>
+                  <% } else { %>
+                  <%= event.title || 'Event' %>
+                  <% } %>
+                </h3>
+
+                <!-- Schedule & Location -->
+                <div class="space-y-1.5 text-xs sm:text-sm text-gray-600 font-medium pt-1">
+                  <p class="flex items-center gap-2 text-gray-800 font-semibold">
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span><%= (event.event_date) ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'TBA' %></span>
+                  </p>
+                  <p class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span><%= event.venue || 'Venue TBA' %>, <strong class="font-semibold text-gray-700"><%= event.city || 'Indonesia' %></strong></span>
+                  </p>
+                </div>
+
+                <!-- Organizer Info -->
+                <p class="text-xs text-gray-400 font-semibold pt-1">
+                  Organized by: <span class="text-gray-700 font-bold"><%= organizerName %></span>
+                </p>
+              </div>
             </div>
-            <p class="text-xs text-gray-500 font-semibold">
-              <%= order.quantity || 1 %> Ticket(s)
-              <% if (event.price) { %>
-              (Rp<%= Number(event.price).toLocaleString('id-ID') %> / ticket)
-              <% } %>
-            </p>
+
+            <!-- Right: Quantity & Pricing Summary -->
+            <div class="flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end justify-between gap-4 border-t lg:border-t-0 border-gray-100 pt-4 lg:pt-0 shrink-0">
+              <div class="text-left sm:text-right space-y-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">Total Amount</span>
+                <div class="text-2xl font-extrabold text-primary tracking-tight">
+                  <%= Number(order.total_amount || 0) === 0 ? 'Free' : ('Rp' + Number(order.total_amount).toLocaleString('id-ID')) %>
+                </div>
+                <div class="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-extrabold mt-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z" />
+                  </svg>
+                  <span><%= order.quantity || 1 %> Ticket(s)</span>
+                </div>
+              </div>
+            </div>
+
           </div>
-        </div>
 
-      </div>
-
-      <!-- ACTION BUTTONS BAR (Lihat Event, Lihat Tiket jika paid, Bayar Sekarang jika pending) -->
-      <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-100 flex-wrap">
-
-        <div class="flex items-center gap-2.5 flex-wrap">
-
-          <!-- 1. "View Event" Button (Visible for ALL STATUSES) -->
-          <% if (event.id) { %>
-          <a href="/events/<%= event.id %>" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-700 hover:text-primary bg-bg-base/70 hover:bg-bg-base px-4 py-2.5 rounded-2xl border border-gray-200 shadow-sm transition-all duration-200 hover:scale-[1.02]">
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            <span>View Event</span>
-          </a>
-          <% } %>
-
-          <!-- 2. "View Ticket" Button (Visible IF STATUS IS PAID / COMPLETED / SUCCESS) -->
+          <!-- TICKET CODE & BARCODE PREVIEW SECTION (FOR PAID ORDERS) -->
           <% if (isPaid) { %>
-          <button type="button" onclick="openTicketModal('ticket-modal-<%= order.id %>')" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white bg-primary hover:bg-secondary px-5 py-2.5 rounded-2xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z" />
-            </svg>
-            <span>View Ticket</span>
-          </button>
+            <div class="bg-gradient-to-r from-bg-base/60 to-accent/20 rounded-2xl p-4 border border-gray-200/80 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                  <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Issued E-Ticket Codes (<%= tickets.length > 0 ? tickets.length : order.quantity %>)
+                </span>
+                <button type="button" onclick="openTicketModal('ticket-modal-<%= order.id %>')" class="text-xs font-bold text-primary hover:text-secondary flex items-center gap-1 transition-colors">
+                  <span>View QR & Barcodes</span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Ticket Badges Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <% if (tickets && tickets.length > 0) { %>
+                  <% tickets.forEach((ticket, idx) => { %>
+                    <div class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm flex items-center justify-between gap-3">
+                      <div class="space-y-0.5 overflow-hidden">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase block">Ticket #<%= idx + 1 %> • <%= ticket.attendee_name || 'Attendee' %></span>
+                        <span class="text-xs font-mono font-black text-primary tracking-wider block truncate"><%= ticket.ticket_code %></span>
+                      </div>
+                      <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
+                        <i class="bi bi-qr-code text-sm"></i>
+                      </div>
+                    </div>
+                  <% }); %>
+                <% } else { %>
+                  <div class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm flex items-center justify-between gap-3">
+                    <div class="space-y-0.5 overflow-hidden">
+                      <span class="text-[9px] font-bold text-gray-400 uppercase block">Ticket Pass</span>
+                      <span class="text-xs font-mono font-black text-primary tracking-wider block truncate">ORDER-#<%= order.id %></span>
+                    </div>
+                    <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
+                      <i class="bi bi-qr-code text-sm"></i>
+                    </div>
+                  </div>
+                <% } %>
+              </div>
+            </div>
           <% } %>
 
-          <!-- 3. "Pay Now" Button (Visible IF STATUS IS PENDING) -->
-          <% if (isPending) { %>
-          <a href="<%= order.xendit_payment_url || ('/events/' + (event.id || 1) + '/checkout') %>" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white bg-amber-500 hover:bg-amber-600 px-5 py-2.5 rounded-2xl shadow-md shadow-amber-500/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 00-2 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span>Pay Now</span>
-          </a>
-          <% } %>
+          <!-- ACTION BUTTONS BAR -->
+          <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-100 flex-wrap">
 
-        </div>
+            <div class="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
 
-      </div>
+              <!-- 1. "View Event" Button -->
+              <% if (event.id) { %>
+              <a href="/events/<%= event.id %>" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-700 hover:text-primary bg-bg-base/70 hover:bg-bg-base px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm transition-all duration-200 hover:scale-[1.02]">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>View Event</span>
+              </a>
+              <% } %>
 
-    </div>
+              <!-- 2. "View Ticket / Barcode" Button (For Paid Orders) -->
+              <% if (isPaid) { %>
+              <button type="button" onclick="openTicketModal('ticket-modal-<%= order.id %>')" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white bg-primary hover:bg-secondary px-5 py-2.5 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z" />
+                </svg>
+                <span>View Ticket & QR Code</span>
+              </button>
 
-    <!-- MODAL E-TICKET FOR PAID ORDERS -->
-    <% if (isPaid) { %>
-    <div id="ticket-modal-<%= order.id %>" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 border border-accent/60 shadow-2xl space-y-6 relative transform transition-all">
+              <a href="/orders/success?order_id=<%= order.xendit_invoice_id || order.external_id || order.id %>" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-4 py-2.5 rounded-xl border border-emerald-200 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Order Confirmation</span>
+              </a>
+              <% } %>
 
-        <!-- Close Button -->
-        <button type="button" onclick="closeTicketModal('ticket-modal-<%= order.id %>')" class="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-xl hover:bg-gray-100 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+              <!-- 3. "Pay Now" Button (For Pending Orders) -->
+              <% if (isPending) { %>
+              <a href="<%= order.xendit_payment_url || ('/events/' + (event.id || 1) + '/checkout') %>" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white bg-amber-500 hover:bg-amber-600 px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 00-2 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Pay Now</span>
+              </a>
+              <% } %>
 
-        <!-- Modal Header -->
-        <div class="border-b border-gray-100 pb-4">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
-            Verified E-Ticket Pass
-          </span>
-          <h3 class="text-xl font-extrabold text-gray-900 mt-2">
-            <%= event.title || 'Event Ticket' %>
-          </h3>
-        </div>
+              <!-- 4. "Retry Checkout" Button (For Failed Orders) -->
+              <% if (isFailed) { %>
+              <a href="<%= event.id ? ('/events/' + event.id + '/checkout') : '/events' %>" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 px-4 py-2.5 rounded-xl border border-red-200 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Retry Checkout</span>
+              </a>
+              <% } %>
 
-        <!-- Schedule & Venue Info -->
-        <div class="bg-bg-base/40 rounded-2xl p-4 border border-gray-200/60 space-y-2 text-xs font-semibold text-gray-700">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span><%= (event.event_date) ? new Date(event.event_date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'TBA' %></span>
-          </div>
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span><%= event.venue || 'Venue' %>, <%= event.city || 'Indonesia' %></span>
-          </div>
-        </div>
-
-        <!-- Ticket Barcode Cards -->
-        <div class="space-y-3">
-          <span class="text-xs font-bold uppercase tracking-wider text-gray-600 block">E-Ticket Barcodes (<%= (order.Tickets && order.Tickets.length > 0) ? order.Tickets.length : order.quantity %> Tickets)</span>
-
-          <% if (order.Tickets && order.Tickets.length > 0) { %>
-          <% order.Tickets.forEach((t, i) => { %>
-          <div class="bg-white p-4 rounded-2xl border-2 border-primary/20 shadow-sm flex items-center justify-between gap-4">
-            <div class="space-y-1 overflow-hidden">
-              <span class="text-[10px] font-extrabold uppercase text-gray-400 block">Ticket #<%= i + 1 %> • <%= t.attendee_name || 'Attendee' %></span>
-              <p class="text-base font-mono font-black text-primary tracking-wider truncate"><%= t.ticket_code %></p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl shrink-0 border border-primary/20">
-              <i class="bi bi-qr-code"></i>
-            </div>
+
           </div>
-          <% }); %>
-          <% } else { %>
-          <div class="bg-white p-4 rounded-2xl border-2 border-primary/20 shadow-sm flex items-center justify-between gap-4">
-            <div class="space-y-1 overflow-hidden">
-              <span class="text-[10px] font-extrabold uppercase text-gray-400 block">Ticket #1 • Pass</span>
-              <p class="text-base font-mono font-black text-primary tracking-wider truncate">EH-TICKET-<%= order.id %>-ACTIVE</p>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl shrink-0 border border-primary/20">
-              <i class="bi bi-qr-code"></i>
-            </div>
-          </div>
-          <% } %>
+
         </div>
 
-        <!-- Modal Footer Actions -->
-        <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="closeTicketModal('ticket-modal-<%= order.id %>')" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors">
-            Close
-          </button>
-          <button type="button" onclick="window.print()" class="px-5 py-2.5 bg-primary hover:bg-secondary text-white font-bold text-xs rounded-xl shadow-md transition-all">
-            Print Ticket
-          </button>
+        <!-- MODAL E-TICKET FOR PAID ORDERS -->
+        <% if (isPaid) { %>
+        <div id="ticket-modal-<%= order.id %>" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 overflow-y-auto no-print-modal">
+          <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 border border-accent/60 shadow-2xl space-y-6 relative transform transition-all print-active-modal">
+
+            <!-- Close Button -->
+            <button type="button" onclick="closeTicketModal('ticket-modal-<%= order.id %>')" class="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-xl hover:bg-gray-100 transition-colors no-print">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <!-- Modal Printable Content Box -->
+            <div id="printable-ticket-content-<%= order.id %>" class="space-y-6">
+
+              <!-- Modal Header -->
+              <div class="border-b border-gray-100 pb-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                    Verified E-Ticket Pass
+                  </span>
+                  <span class="text-xs text-gray-400 font-mono">Order #<%= order.id %></span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900">
+                  <%= event.title || 'Event Ticket' %>
+                </h3>
+              </div>
+
+              <!-- Schedule & Venue Info -->
+              <div class="bg-bg-base/40 rounded-2xl p-4 border border-gray-200/60 space-y-2 text-xs font-semibold text-gray-700">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span><%= (event.event_date) ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'TBA' %></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span><%= event.venue || 'Venue' %>, <%= event.city || 'Indonesia' %></span>
+                </div>
+              </div>
+
+              <!-- Ticket Barcode & QR Code Cards -->
+              <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-600 block">Issued Tickets (<%= tickets.length > 0 ? tickets.length : order.quantity %> Ticket Pass)</span>
+
+                <% if (tickets && tickets.length > 0) { %>
+                  <% tickets.forEach((t, i) => { %>
+                    <div class="bg-white p-5 rounded-2xl border-2 border-primary/20 shadow-md space-y-4">
+                      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <!-- Left Attendee Details -->
+                        <div class="space-y-2 flex-grow text-left">
+                          <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider block">Ticket #<%= i + 1 %></span>
+                          <div>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase block">Attendee Name</span>
+                            <span class="text-sm font-bold text-gray-900 block"><%= t.attendee_name || (user && user.name) || 'Attendee' %></span>
+                          </div>
+                          <div>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase block">Ticket Code</span>
+                            <span class="text-base font-mono font-black text-primary tracking-widest block"><%= t.ticket_code %></span>
+                          </div>
+                        </div>
+
+                        <!-- Right QR Code Image -->
+                        <div class="flex flex-col items-center justify-center shrink-0">
+                          <div class="w-28 h-28 bg-white p-1.5 border-2 border-gray-800 rounded-xl shadow-inner">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= encodeURIComponent(t.barcode_data || t.ticket_code) %>" alt="QR Code" class="w-full h-full object-contain" />
+                          </div>
+                          <span class="text-[9px] font-mono text-gray-500 font-bold mt-1 tracking-wider"><%= t.ticket_code %></span>
+                        </div>
+                      </div>
+                    </div>
+                  <% }); %>
+                <% } else { %>
+                  <div class="bg-white p-5 rounded-2xl border-2 border-primary/20 shadow-md flex items-center justify-between gap-4">
+                    <div class="space-y-1">
+                      <span class="text-[10px] font-extrabold uppercase text-gray-400 block">Ticket Pass #1</span>
+                      <span class="text-sm font-bold text-gray-900 block"><%= order.attendee_name || (user && user.name) || 'Attendee' %></span>
+                      <span class="text-base font-mono font-black text-primary tracking-widest block">ORDER-#<%= order.id %></span>
+                    </div>
+                    <div class="w-24 h-24 bg-white p-1 border border-gray-800 rounded-xl">
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= encodeURIComponent('ORDER-' + order.id) %>" alt="QR Code" class="w-full h-full object-contain" />
+                    </div>
+                  </div>
+                <% } %>
+              </div>
+
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-3 no-print">
+              <button type="button" onclick="closeTicketModal('ticket-modal-<%= order.id %>')" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors">
+                Close
+              </button>
+              <button type="button" onclick="printTicketModal('printable-ticket-content-<%= order.id %>')" class="px-5 py-2.5 bg-primary hover:bg-secondary text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Print Ticket</span>
+              </button>
+            </div>
+
+          </div>
         </div>
+        <% } %>
 
-      </div>
-    </div>
-    <% } %>
-
-    <% }); %>
+      <% }); %>
 
     <% } else { %>
-    <!-- EMPTY STATE WHEN NO ORDERS EXIST -->
-    <div class="text-center py-16 px-4 bg-white rounded-3xl border border-accent/40 shadow-lg shadow-gray-200/40 space-y-4">
-      <div class="w-16 h-16 rounded-3xl bg-primary/10 text-primary mx-auto flex items-center justify-center border border-primary/20 shadow-inner">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
+      <!-- EMPTY STATE WHEN NO ORDERS EXIST -->
+      <div class="text-center py-16 px-4 bg-white rounded-3xl border border-accent/40 shadow-lg shadow-gray-200/40 space-y-4">
+        <div class="w-16 h-16 rounded-3xl bg-primary/10 text-primary mx-auto flex items-center justify-center border border-primary/20 shadow-inner">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-xl font-extrabold text-gray-900">No Purchased Tickets Yet</h3>
+          <p class="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">
+            You haven't ordered any event tickets. Discover upcoming events in your city and book your tickets today!
+          </p>
+        </div>
+        <a href="/events" class="inline-flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-secondary text-white font-bold text-sm rounded-2xl shadow-md shadow-primary/20 hover:scale-105 transition-all duration-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span>Browse Events Now</span>
+        </a>
       </div>
-      <div class="space-y-1">
-        <h3 class="text-xl font-extrabold text-gray-900">No Purchased Tickets Yet</h3>
-        <p class="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">
-          You haven't ordered any event tickets. Discover upcoming events in your city and book your tickets today!
-        </p>
-      </div>
-      <a href="/events" class="inline-flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-secondary text-white font-bold text-sm rounded-2xl shadow-md shadow-primary/20 hover:scale-105 transition-all duration-200">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <span>Browse Events Now</span>
-      </a>
-    </div>
     <% } %>
 
   </div>
@@ -297,7 +418,7 @@
 </main>
 <!-- ==================== END MAIN MY ORDERS CONTAINER ==================== -->
 
-<!-- Modal Toggle Script -->
+<!-- Modal Toggle & Print Script -->
 <script>
   function openTicketModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -313,6 +434,16 @@
       modal.classList.add('hidden');
       document.body.style.overflow = '';
     }
+  }
+
+  function printTicketModal(contentId) {
+    const content = document.getElementById(contentId);
+    const printArea = document.getElementById('print-area');
+    if (!content || !printArea) return;
+
+    printArea.innerHTML = content.innerHTML;
+    window.print();
+    printArea.innerHTML = '';
   }
 </script>
 
