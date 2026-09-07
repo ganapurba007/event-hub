@@ -875,7 +875,7 @@ async function handleOrderCheckout(req, res) {
         mobileNumber: attendee_phone || req.session.user.phone || "081234567890",
       },
       successRedirectUrl: `${baseUrl}/orders/success?order_id=${externalId}`,
-      failureRedirectUrl: `${baseUrl}/my-orders`,
+      failureRedirectUrl: `${baseUrl}/orders/failed?order_id=${externalId}`,
       currency: "IDR",
       items: [
         {
@@ -1078,6 +1078,122 @@ app.get("/orders/success", requiredAuth, async (req, res) => {
       order: null,
       message: null,
       error: "Failed to load order details: " + error.message,
+    });
+  }
+});
+
+// Order failed page
+app.get("/orders/failed", requiredAuth, async (req, res) => {
+  try {
+    const { order_id, id } = req.query;
+    const searchId = order_id || id;
+    console.log("Failed order search id : ", searchId);
+
+    let order = null;
+
+    if (searchId) {
+      // 1. Find by xendit_invoice_id
+      order = await Order.findOne({
+        where: {
+          xendit_invoice_id: searchId,
+        },
+        include: [
+          {
+            model: Event,
+            include: [
+              Category,
+              { model: User, attributes: ["id", "name", "email", "phone"] },
+            ],
+          },
+          { model: Ticket },
+        ],
+      });
+
+      // 2. Find by external_id
+      if (!order) {
+        console.log("Trying to find by external id");
+        order = await Order.findOne({
+          where: {
+            external_id: searchId,
+          },
+          include: [
+            {
+              model: Event,
+              include: [
+                Category,
+                { model: User, attributes: ["id", "name", "email", "phone"] },
+              ],
+            },
+            {
+              model: Ticket,
+            },
+          ],
+        });
+      }
+
+      // 3. Find by primary key id if numeric
+      if (!order && !isNaN(searchId)) {
+        console.log("Trying to find by primary key id");
+        order = await Order.findOne({
+          where: {
+            id: searchId,
+          },
+          include: [
+            {
+              model: Event,
+              include: [
+                Category,
+                { model: User, attributes: ["id", "name", "email", "phone"] },
+              ],
+            },
+            {
+              model: Ticket,
+            },
+          ],
+        });
+      }
+    }
+
+    // 4. Fallback to latest order of logged-in user if no order matched searchId
+    if (!order && req.session.user) {
+      order = await Order.findOne({
+        where: { user_id: req.session.user.id },
+        order: [["created_at", "DESC"]],
+        include: [
+          {
+            model: Event,
+            include: [
+              Category,
+              { model: User, attributes: ["id", "name", "email", "phone"] },
+            ],
+          },
+          {
+            model: Ticket,
+          },
+        ],
+      });
+    }
+
+    // UPDATE STATUS TO FAILED IF STILL PENDING
+    if (order && order.status === "pending") {
+      await order.update({
+        status: "failed",
+      });
+      console.log("Order status updated to failed");
+    }
+
+    res.render("orders/failed", {
+      user: req.session.user,
+      order: order,
+      message: "Payment transaction was not completed or failed.",
+    });
+  } catch (error) {
+    console.log("Failed page error : ", error);
+    res.status(500).render("orders/failed", {
+      user: req.session.user,
+      order: null,
+      message: null,
+      error: "Failed to load transaction details: " + error.message,
     });
   }
 });

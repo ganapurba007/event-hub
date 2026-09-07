@@ -1,0 +1,257 @@
+<%- include('../../partials/header'); %>
+
+<!-- ==================== MAIN FAILED CONTAINER ==================== -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-5xl">
+
+  <!-- BREADCRUMB & HEADER -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+        <a href="/" class="hover:text-primary transition-colors">Home</a>
+        <span>/</span>
+        <a href="/my-orders" class="hover:text-primary transition-colors">My Orders</a>
+        <span>/</span>
+        <span class="text-red-600 font-bold">Payment Failed</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+        <span class="w-3.5 h-8 bg-red-500 rounded-full inline-block"></span>
+        Payment Transaction Unsuccessful
+      </h1>
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="flex items-center gap-2.5">
+      <a href="/my-orders" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm transition-all duration-200 hover:scale-[1.02]">
+        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m7-7l-7 7 7 7" />
+        </svg>
+        <span>My Orders</span>
+      </a>
+
+      <a href="/events" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span>Browse Events</span>
+      </a>
+    </div>
+  </div>
+
+  <% if (typeof order !== 'undefined' && order) { %>
+    <% 
+      const event = order.Event || {};
+      const categoryName = (event.Category && event.Category.name) ? event.Category.name : 'Event';
+      const organizerName = (event.User && event.User.name) ? event.User.name : 'Event Hub Organizer';
+      const orderStatus = (order.status || 'failed').toLowerCase();
+    %>
+
+    <!-- FAILED HERO HEADER CARD -->
+    <div class="bg-gradient-to-br from-red-600 via-rose-600 to-rose-800 text-white rounded-3xl p-6 sm:p-8 shadow-xl mb-8 relative overflow-hidden">
+      <!-- Decorative background shapes -->
+      <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -left-10 -top-10 w-48 h-48 bg-rose-400/20 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex items-start sm:items-center gap-4">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center shrink-0 border border-white/30 shadow-inner">
+            <svg class="w-10 h-10 text-rose-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <div class="space-y-1">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/40 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-rose-100 border border-white/20">
+              <span class="w-2 h-2 rounded-full bg-rose-300 animate-ping"></span>
+              Payment Unsuccessful
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Payment Failed or Cancelled</h2>
+            <p class="text-rose-100 text-xs sm:text-sm max-w-xl">
+              We could not complete your payment transaction. Don't worry, no funds were deducted or your transaction was safely rolled back.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-left md:text-right shrink-0">
+          <span class="text-[11px] uppercase tracking-wider text-rose-200 font-bold block">Order Reference</span>
+          <span class="text-lg font-mono font-extrabold text-white tracking-wider block">#<%= order.id %></span>
+          <span class="text-xs text-rose-100 font-medium">
+            <%= order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-' %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID CONTAINER -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- LEFT COLUMN: ORDER DETAILS & TROUBLESHOOTING (7 COLS) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- EVENT DETAIL SUMMARY CARD -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-accent/40 shadow-xl shadow-gray-200/40 space-y-6">
+          <div class="flex flex-col sm:flex-row items-start gap-5">
+            <!-- Event Poster -->
+            <div class="w-full sm:w-36 h-40 rounded-2xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 shadow-md relative">
+              <img src="<%= (event.image_path) ? event.image_path : '/images/placeholder.jpg' %>" alt="<%= (event.title) ? event.title : 'Event' %>" class="w-full h-full object-cover" />
+              <div class="absolute top-2.5 left-2.5 px-2.5 py-0.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-extrabold uppercase rounded-lg">
+                <%= categoryName %>
+              </div>
+            </div>
+
+            <!-- Event Header Info -->
+            <div class="space-y-3 flex-grow">
+              <div class="space-y-1">
+                <h3 class="text-xl font-extrabold text-gray-900 leading-snug">
+                  <%= event.title || 'Event Title' %>
+                </h3>
+                <p class="text-xs text-gray-500 font-medium">
+                  Organized by <strong class="text-gray-800 font-bold"><%= organizerName %></strong>
+                </p>
+              </div>
+
+              <!-- Date & Location -->
+              <div class="space-y-2 text-xs text-gray-600 font-medium bg-bg-base/50 rounded-2xl p-3 border border-gray-100">
+                <div class="flex items-center gap-2 text-gray-800 font-semibold">
+                  <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span><%= (event.event_date) ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'TBA' %></span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-primary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span><%= event.venue || 'Venue Location' %>, <strong class="text-gray-800"><%= event.city || 'Indonesia' %></strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMON FAILURE REASONS CARD -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-red-100 shadow-xl shadow-gray-200/40 space-y-4">
+          <h4 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Why did my payment fail?
+          </h4>
+          <ul class="space-y-2.5 text-xs text-gray-600 leading-relaxed font-medium">
+            <li class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1.5"></span>
+              <span><strong>Payment Window Expired:</strong> The payment session timed out before the payment was authorized.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1.5"></span>
+              <span><strong>Cancelled by User:</strong> The transaction was cancelled on the payment gateway page.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1.5"></span>
+              <span><strong>Bank or Gateway Issue:</strong> Insufficient balance or temporary network error with the payment provider.</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: ORDER SUMMARY & RETRY ACTION (5 COLS) -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- PAYMENT SUMMARY CARD -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-accent/40 shadow-xl shadow-gray-200/40 space-y-6">
+          <div class="border-b border-gray-100 pb-4">
+            <h3 class="text-lg font-extrabold text-gray-900">Transaction Summary</h3>
+            <p class="text-xs text-gray-500 mt-0.5">Details of your attempted booking</p>
+          </div>
+
+          <div class="space-y-3.5 text-xs font-medium">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-50">
+              <span class="text-gray-500">Payment Status</span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-red-50 text-red-700 border border-red-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                <%= orderStatus.toUpperCase() %>
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Order Number</span>
+              <span class="font-mono font-bold text-gray-900">#<%= order.id %></span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Ticket Quantity</span>
+              <span class="font-bold text-gray-900"><%= order.quantity %> Ticket(s)</span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Price per Ticket</span>
+              <span class="font-semibold text-gray-700">Rp<%= Number(event.price || 0).toLocaleString('id-ID') %></span>
+            </div>
+
+            <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
+              <span class="font-bold text-gray-900">Total Amount</span>
+              <span class="text-xl font-extrabold text-red-600">Rp<%= Number(order.total_amount || 0).toLocaleString('id-ID') %></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS CARD -->
+        <div class="bg-white rounded-3xl p-6 border border-accent/40 shadow-xl shadow-gray-200/40 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400">What would you like to do?</h4>
+
+          <!-- Retry Payment or Checkout -->
+          <% if (event && event.id) { %>
+          <a href="/events/<%= event.id %>/checkout" class="w-full py-3.5 px-4 bg-primary hover:bg-secondary text-white font-extrabold text-sm rounded-2xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Retry Checkout & Payment</span>
+          </a>
+          <% } else if (order.xendit_payment_url) { %>
+          <a href="<%= order.xendit_payment_url %>" class="w-full py-3.5 px-4 bg-primary hover:bg-secondary text-white font-extrabold text-sm rounded-2xl shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 00-2 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span>Try Payment Link Again</span>
+          </a>
+          <% } %>
+
+          <a href="/my-orders" class="w-full py-3.5 px-4 bg-bg-base/80 hover:bg-bg-base text-gray-800 font-bold text-sm rounded-2xl border border-gray-200 transition-all duration-200 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m7-7l-7 7 7 7" />
+            </svg>
+            <span>View All My Orders</span>
+          </a>
+
+          <a href="/events" class="w-full py-3 px-4 text-primary hover:text-secondary font-bold text-xs text-center block transition-colors">
+            + Browse Other Events
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+  <% } else { %>
+    <!-- NO ORDER FOUND FALLBACK CARD -->
+    <div class="bg-white rounded-3xl p-8 text-center max-w-md mx-auto border border-gray-200 shadow-xl space-y-5 my-12">
+      <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-xl font-extrabold text-gray-900">Payment Failed</h3>
+        <p class="text-xs text-gray-500 leading-relaxed">
+          Your payment transaction could not be processed. Please check your order details or try placing the order again.
+        </p>
+      </div>
+      <a href="/my-orders" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white font-extrabold text-xs px-6 py-3 rounded-2xl shadow-md transition-all">
+        Go to My Orders
+      </a>
+    </div>
+  <% } %>
+
+</main>
+
+<%- include('../../partials/footer'); %>
