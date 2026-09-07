@@ -160,7 +160,7 @@
 
           <!-- Thumbnail Image (16:9 ratio) -->
           <div class="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
-            <img src="<%= event.image_path %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <img src="<%= event.image_path %>" alt="<%= event.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=800&q=80';" />
 
             <!-- Category Badge -->
             <div class="absolute top-3 left-3">
@@ -237,7 +237,7 @@
     <!-- Load More Button Container (Shown if total events > 6) -->
     <% if (events.length > 6) { %>
     <div class="mt-10 text-center" id="load-more-container">
-      <button type="button" id="load-more-btn" class="inline-flex items-center gap-2 bg-white hover:bg-primary text-gray-700 hover:text-white border border-gray-200 hover:border-primary px-8 py-3.5 rounded-2xl font-bold transition-all duration-300 shadow-md shadow-gray-200/50 hover:shadow-primary/20 transform hover:-translate-y-0.5">
+      <button type="button" id="load-more-btn" class="inline-flex items-center gap-2 bg-white hover:bg-primary text-gray-700 hover:text-white border border-gray-200 hover:border-primary px-8 py-3.5 rounded-2xl font-bold transition-all duration-300 shadow-md shadow-gray-200/50 hover:shadow-primary/20 transform hover:-translate-y-0.5 cursor-pointer">
         <span>Load More Events</span>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -265,5 +265,35 @@
   </section>
 
 </main>
+
+<!-- Client-side Load More Events Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const BATCH_SIZE = 6;
+
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const hiddenCards = document.querySelectorAll('.event-card-item.hidden');
+        
+        let revealedCount = 0;
+        hiddenCards.forEach(card => {
+          if (revealedCount < BATCH_SIZE) {
+            card.classList.remove('hidden');
+            revealedCount++;
+          }
+        });
+
+        // Hide Load More button if no more hidden cards remain
+        const remainingHidden = document.querySelectorAll('.event-card-item.hidden');
+        if (remainingHidden.length === 0 && loadMoreContainer) {
+          loadMoreContainer.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>
 
 <%- include('../../partials/footer'); %>
