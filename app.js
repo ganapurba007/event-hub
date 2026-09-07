@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 const { Sequelize, DataTypes, Op } = require("sequelize");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
@@ -46,11 +46,17 @@ app.use(
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-const sequelize = new Sequelize(env.DB_NAME, env.DB_USERNAME, env.DB_PASSWORD, {
-  host: env.DB_HOST || "localhost",
-  dialect: "mysql",
-  logging: false,
-});
+const sequelize = new Sequelize(
+  env.DB_NAME || "event-management",
+  env.DB_USERNAME || "root",
+  env.DB_PASSWORD || "",
+  {
+    host: env.DB_HOST || "127.0.0.1",
+    port: env.DB_PORT || 3306,
+    dialect: "mysql",
+    logging: false,
+  }
+);
 
 const User = sequelize.define(
   "User",
@@ -932,6 +938,25 @@ app.get("/my-events", requiredAuth, requiredCreator, async (req, res) => {
 
 // END CONTROLLERS
 
+// Ensure database exists before Sequelize sync
+async function ensureDatabaseExists() {
+  const host = env.DB_HOST || "127.0.0.1";
+  const port = env.DB_PORT || 3306;
+  const user = env.DB_USERNAME || "root";
+  const password = env.DB_PASSWORD || "";
+  const databaseName = env.DB_NAME || "event-management";
+
+  const connection = await mysql.createConnection({
+    host,
+    port,
+    user,
+    password,
+  });
+
+  await connection.query(`CREATE DATABASE IF NOT EXISTS \`${databaseName}\`;`);
+  await connection.end();
+}
+
 // Sync table model
 async function syncDatabase() {
   try {
@@ -945,6 +970,9 @@ async function syncDatabase() {
 // Main server
 async function startServer() {
   try {
+    // Auto-create database if MySQL service is running
+    await ensureDatabaseExists();
+
     await sequelize.authenticate();
     console.log("Database connection has been established successfully.");
 
@@ -954,7 +982,15 @@ async function startServer() {
       console.log(`Server running on http://localhost:${port}`);
     });
   } catch (err) {
-    console.log("Unable to connect:", err);
+    if (err.code === "ECONNREFUSED" || err.original?.code === "ECONNREFUSED") {
+      console.error("\n==================================================================");
+      console.error(" [DATABASE ERROR] Tidak dapat terhubung ke server MySQL (ECONNREFUSED).");
+      console.error(" Pastikan service MySQL (XAMPP / Laragon / MySQL Service) sudah BERJALAN!");
+      console.error(" Details:", err.message);
+      console.error("==================================================================\n");
+    } else {
+      console.error("Unable to connect to database:", err);
+    }
   }
 }
 
