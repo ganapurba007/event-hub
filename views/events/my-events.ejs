@@ -139,14 +139,12 @@
               <span>Edit Event</span>
             </a>
 
-            <form action="/events/<%= event.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this event? This action cannot be undone.');">
-              <button type="submit" class="inline-flex items-center justify-center gap-1.5 text-xs font-extrabold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2.5 rounded-2xl shadow-md shadow-red-600/20 hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span>Delete</span>
-              </button>
-            </form>
+            <!-- <button type="button" data-id="<%= event.id %>" data-title="<%= event.title %>" onclick="confirmDeleteEvent(this.dataset.id, this.dataset.title)" class="inline-flex items-center justify-center gap-1.5 text-xs font-extrabold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2.5 rounded-2xl shadow-md shadow-red-600/20 hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Delete</span>
+            </button> -->
           </div>
 
         </div>
@@ -177,7 +175,85 @@
 
   </div>
 
+  <!-- ==================== CUSTOM DELETE CONFIRMATION MODAL ==================== -->
+  <div id="delete-event-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 transition-opacity">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-200" id="delete-modal-card">
+
+      <!-- Modal Header Icon -->
+      <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="text-center space-y-2 mb-6">
+        <h3 class="text-xl font-extrabold text-gray-900">Delete Event?</h3>
+        <p class="text-sm text-gray-500 leading-relaxed">
+          Are you sure you want to delete <strong id="delete-event-title-target" class="text-gray-800 font-bold"></strong>? This action is permanent and cannot be undone.
+        </p>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex items-center gap-3">
+        <button type="button" onclick="closeDeleteModal()" class="w-1/2 py-3.5 px-4 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold text-sm transition-all cursor-pointer">
+          Cancel
+        </button>
+
+        <form id="delete-event-form-target" method="POST" action="" class="w-1/2">
+          <button type="submit" class="w-full py-3.5 px-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm shadow-lg shadow-red-600/30 hover:scale-[1.02] transition-all cursor-pointer">
+            Yes, Delete
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
 </main>
 <!-- ==================== END MAIN MY EVENTS CONTAINER ==================== -->
+
+<!-- Client-side Custom Delete Modal Script -->
+<script>
+  function confirmDeleteEvent(eventId, eventTitle) {
+    const modal = document.getElementById('delete-event-modal');
+    const modalCard = document.getElementById('delete-modal-card');
+    const form = document.getElementById('delete-event-form-target');
+    const titleTarget = document.getElementById('delete-event-title-target');
+
+    if (modal && form && titleTarget) {
+      form.action = `/events/${eventId}/delete`;
+      titleTarget.textContent = `"${eventTitle}"`;
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modalCard.classList.remove('scale-95', 'opacity-0');
+        modalCard.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+  }
+
+  function closeDeleteModal() {
+    const modal = document.getElementById('delete-event-modal');
+    const modalCard = document.getElementById('delete-modal-card');
+
+    if (modal && modalCard) {
+      modalCard.classList.remove('scale-100', 'opacity-100');
+      modalCard.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 200);
+    }
+  }
+
+  // Close modal on click outside backdrop or ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDeleteModal();
+  });
+
+  document.getElementById('delete-event-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeDeleteModal();
+  });
+</script>
 
 <%- include('../../partials/footer'); %>
