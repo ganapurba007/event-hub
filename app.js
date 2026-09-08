@@ -1388,6 +1388,35 @@ app.get("/my-events", requiredAuth, requiredCreator, async (req, res) => {
 });
 // END MY EVENTS PAGE
 
+// DELETE EVENTS
+const handleDeleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findOne({
+      where: {
+        id: req.params.id,
+        creator_id: req.session.user.id,
+      },
+    });
+
+    if (!event) {
+      req.session.error = "Event not found or you are not authorized to delete it.";
+      return res.redirect("/my-events");
+    }
+
+    await event.destroy();
+    req.session.message = "Event deleted successfully";
+    return res.redirect("/my-events");
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    req.session.error = "Failed to delete event: " + error.message;
+    return res.redirect("/my-events");
+  }
+};
+
+app.post("/events/:id/delete", requiredAuth, requiredCreator, handleDeleteEvent);
+app.delete("/events/:id", requiredAuth, requiredCreator, handleDeleteEvent);
+// END DELETE EVENTS
+
 // WEBHOOKS ENDPOINT
 app.get("/webhook/xendit", (req, res) => {
   res.json({
