@@ -64,6 +64,15 @@ const sequelize = new Sequelize(
     port: env.DB_PORT || 3306,
     dialect: "mysql",
     logging: false,
+    dialectOptions:
+      env.DB_HOST && env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost"
+        ? {
+            ssl: {
+              require: true,
+              rejectUnauthorized: false,
+            },
+          }
+        : {},
   },
 );
 
