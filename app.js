@@ -68,8 +68,9 @@ const sequelize = new Sequelize(
 );
 
 // XENDIT CONFIG
+const xenditSecretKey = env.XENDIT_SECRET_KEY || "xnd_development_dummy_key_for_init";
 const xendit = new Xendit({
-  secretKey: env.XENDIT_SECRET_KEY,
+  secretKey: xenditSecretKey,
 });
 
 const { Invoice } = xendit;
