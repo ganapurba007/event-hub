@@ -43,6 +43,18 @@ app.set("trust proxy", 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
+
+// Health & Diagnostic Endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    environment: process.env.NODE_ENV || "development",
+    isVercel: !!process.env.VERCEL,
+    dbHostConfigured: !!process.env.DB_HOST,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "eventhub-default-secret",
@@ -61,7 +73,7 @@ const sequelize = new Sequelize(
   env.DB_PASSWORD || "",
   {
     host: env.DB_HOST || "127.0.0.1",
-    port: env.DB_PORT || 3306,
+    port: Number(env.DB_PORT) || 3306,
     dialect: "mysql",
     logging: false,
     dialectOptions:
