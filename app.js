@@ -194,6 +194,32 @@ const EventAttachment = sequelize.define(
   },
 );
 
+const XenditWebhookLog = sequelize.define(
+  "XenditWebhookLog",
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    webhook_id: { type: DataTypes.STRING(255) },
+    event: { type: DataTypes.STRING(100) },
+    invoice_id: { type: DataTypes.STRING(255) },
+    external_id: { type: DataTypes.STRING(255) },
+    status: { type: DataTypes.STRING(50) },
+    amount: { type: DataTypes.DECIMAL(10, 2) },
+    payment_method: { type: DataTypes.STRING(255) },
+    payment_channel: { type: DataTypes.STRING(255) },
+    currency: { type: DataTypes.STRING(10) },
+    received_data: { type: DataTypes.TEXT },
+    processed: { type: DataTypes.BOOLEAN, defaultValue: false },
+    processing_error: { type: DataTypes.TEXT },
+    headers: { type: DataTypes.TEXT },
+  },
+  {
+    tableName: "xendit_webhook_logs",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
+);
+
 // Relasi
 User.hasMany(Event, {
   foreignKey: "creator_id",
@@ -827,7 +853,13 @@ app.get("/events/:id/checkout", requiredAuth, async (req, res) => {
 // PROCESS ORDER CHECKOUT & XENDIT INVOICE
 async function handleOrderCheckout(req, res) {
   try {
-    const { event_id, quantity, attendee_name, attendee_email, attendee_phone } = req.body;
+    const {
+      event_id,
+      quantity,
+      attendee_name,
+      attendee_email,
+      attendee_phone,
+    } = req.body;
     const targetEventId = event_id || req.params.id;
     const qty = parseInt(quantity) || 1;
 
@@ -851,7 +883,9 @@ async function handleOrderCheckout(req, res) {
       return res.render("orders/checkout", {
         user: req.session.user,
         event,
-        error: [`Not enough tickets available (only ${event.available_tickets} ticket(s) left)`],
+        error: [
+          `Not enough tickets available (only ${event.available_tickets} ticket(s) left)`,
+        ],
         formData: req.body,
       });
     }
@@ -862,7 +896,10 @@ async function handleOrderCheckout(req, res) {
     const externalId = `event-order-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     const currentPort = env.PORT || 3000;
-    const baseUrl = env.BASE_URL || `${req.protocol}://${req.get("host")}` || `http://localhost:${currentPort}`;
+    const baseUrl =
+      env.BASE_URL ||
+      `${req.protocol}://${req.get("host")}` ||
+      `http://localhost:${currentPort}`;
 
     const invoiceData = {
       externalId: externalId,
@@ -872,7 +909,8 @@ async function handleOrderCheckout(req, res) {
       customer: {
         givenNames: attendee_name || req.session.user.name || "Customer",
         email: attendee_email || req.session.user.email,
-        mobileNumber: attendee_phone || req.session.user.phone || "081234567890",
+        mobileNumber:
+          attendee_phone || req.session.user.phone || "081234567890",
       },
       successRedirectUrl: `${baseUrl}/orders/success?order_id=${externalId}`,
       failureRedirectUrl: `${baseUrl}/orders/failed?order_id=${externalId}`,
@@ -896,10 +934,16 @@ async function handleOrderCheckout(req, res) {
       xenditResponse = await Invoice.createInvoice({
         data: invoiceData,
       });
-      paymentUrl = xenditResponse.invoiceUrl || xenditResponse.invoice_url || xenditResponse.paymentUrl;
+      paymentUrl =
+        xenditResponse.invoiceUrl ||
+        xenditResponse.invoice_url ||
+        xenditResponse.paymentUrl;
       console.log("Xendit Invoice created:", paymentUrl);
     } catch (xenditErr) {
-      console.error("Xendit API creation error:", xenditErr.message || xenditErr);
+      console.error(
+        "Xendit API creation error:",
+        xenditErr.message || xenditErr,
+      );
       // Fallback redirect URL if Xendit API fails
       paymentUrl = `${baseUrl}/orders/success?order_id=${externalId}`;
     }
@@ -916,7 +960,10 @@ async function handleOrderCheckout(req, res) {
       status: "pending",
       xendit_invoice_id: xenditResponse ? xenditResponse.id : externalId,
       xendit_payment_url: paymentUrl,
-      xendit_expiry_date: xenditResponse && xenditResponse.expiryDate ? new Date(xenditResponse.expiryDate) : null,
+      xendit_expiry_date:
+        xenditResponse && xenditResponse.expiryDate
+          ? new Date(xenditResponse.expiryDate)
+          : null,
       external_id: externalId,
     });
 
@@ -948,7 +995,9 @@ async function handleOrderCheckout(req, res) {
     const targetEventId = req.body.event_id || req.params.id;
     let event = null;
     if (targetEventId) {
-      event = await Event.findByPk(targetEventId, { include: [Category, User] });
+      event = await Event.findByPk(targetEventId, {
+        include: [Category, User],
+      });
     }
     return res.status(500).render("orders/checkout", {
       user: req.session.user,
@@ -1337,6 +1386,369 @@ app.get("/my-events", requiredAuth, requiredCreator, async (req, res) => {
 });
 // END MY EVENTS PAGE
 
+// WEBHOOKS ENDPOINT
+app.get("/webhook/xendit", (req, res) => {
+  res.json({
+    message: "Webhook endpoint is working",
+    status: "active",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.post("/webhook/xendit", async (req, res) => {
+  let webhookData = req.body;
+  let logEntry;
+
+  try {
+    const signature = req.headers["x-callback-token"];
+    const webhookId =
+      req.headers["webhook-id"] ||
+      req.headers["x-callback-token"] ||
+      `webhook-${Date.now()}`;
+
+    console.log("=== Xendit Webhook Received ===");
+    console.log("Webhook ID: ", webhookId);
+    console.log("Signature: ", signature ? "Yes" : "No");
+    console.log("Webhook Event: ", webhookData.event);
+    console.log("Invoice ID: ", webhookData.data?.id || webhookData.id);
+
+    logEntry = await XenditWebhookLog.create({
+      webhook_id: webhookId,
+      event: webhookData.event,
+      invoice_id: webhookData.data?.id || webhookData.id,
+      external_id: webhookData.data?.external_id || webhookData.external_id,
+      status: webhookData.data?.status || webhookData.status,
+      amount: webhookData.data?.amount || webhookData.amount,
+      payment_method:
+        webhookData.data?.payment_method || webhookData.payment_method,
+      payment_channel:
+        webhookData.data?.payment_channel || webhookData.payment_channel,
+      currency: webhookData.data?.currency || webhookData.currency,
+      received_data: JSON.stringify(webhookData),
+      headers: JSON.stringify(req.headers),
+      processed: false,
+    });
+
+    console.log(`Log entry created with ID: ${logEntry.id}`);
+
+    // PROCESS Based on Event Type
+    let processingResult;
+    switch (webhookData.event) {
+      case "invoice.paid":
+        processingResult = await handleInvoicePaid(
+          webhookData.data || webhookData,
+          logEntry.id,
+        );
+        break;
+
+      case "invoice.expired":
+        processingResult = await handleInvoiceExpired(
+          webhookData.data || webhookData,
+          logEntry.id,
+        );
+        break;
+
+      case "invoice.failed":
+        processingResult = await handleInvoiceFailed(
+          webhookData.data || webhookData,
+          logEntry.id,
+        );
+        break;
+
+      case "payment.succeeded":
+        processingResult = await handlePaymentSucceeded(
+          webhookData.data || webhookData,
+          logEntry.id,
+        );
+        break;
+
+      case "payment.failed":
+        processingResult = await handlePaymentFailed(
+          webhookData.data || webhookData,
+          logEntry.id,
+        );
+        break;
+
+      default:
+        processingResult = {
+          success: true,
+          message: `Event type ${webhookData.event} is not supported.`,
+        };
+    }
+
+    await logEntry.update({
+      processed: processingResult.success,
+      processing_error: processingResult.success
+        ? null
+        : processingResult.message,
+      status: processingResult.updatedStatus || webhookData.data?.status || webhookData.status,
+    });
+
+    console.log(`Webhook processing completed : ${processingResult.message}`);
+    return res.status(200).json({
+      success: true,
+      message: "Webhook processed successfully",
+      log_id: logEntry.id,
+      event: webhookData.event,
+    });
+  } catch (error) {
+    console.error("Error processing webhook:");
+    console.error("Error", error.message);
+
+    if (logEntry) {
+      await logEntry.update({
+        processed: false,
+        processing_error: error.message,
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process webhook",
+      error: error.message,
+    });
+  }
+});
+
+async function handleInvoicePaid(invoiceData, logId) {
+  try {
+    console.log("Processing invoice paid:", invoiceData);
+    if (!invoiceData || (!invoiceData.id && !invoiceData.external_id)) {
+      throw new Error("Invalid invoice data");
+    }
+
+    const searchCriteria = [];
+    if (invoiceData.id) searchCriteria.push({ xendit_invoice_id: invoiceData.id });
+    if (invoiceData.external_id) {
+      searchCriteria.push({ external_id: invoiceData.external_id });
+      searchCriteria.push({ xendit_invoice_id: invoiceData.external_id });
+    }
+
+    const order = await Order.findOne({
+      where: { [Op.or]: searchCriteria },
+    });
+
+    if (!order) {
+      throw new Error(`Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`);
+    }
+
+    await order.update({
+      status: "paid",
+    });
+    console.log(`Order ${order.id} updated to paid`);
+    return {
+      success: true,
+      message: `Order ${order.id} updated to paid`,
+      updatedStatus: "paid",
+    };
+  } catch (error) {
+    console.error("Error processing invoice paid:", error.message);
+    return {
+      success: false,
+      message: `Error processing invoice paid: ${error.message}`,
+    };
+  }
+}
+
+async function handleInvoiceExpired(invoiceData, logId) {
+  try {
+    console.log("Processing invoice expired:", invoiceData);
+    if (!invoiceData || (!invoiceData.id && !invoiceData.external_id)) {
+      throw new Error("Invalid invoice data");
+    }
+
+    const searchCriteria = [];
+    if (invoiceData.id) searchCriteria.push({ xendit_invoice_id: invoiceData.id });
+    if (invoiceData.external_id) {
+      searchCriteria.push({ external_id: invoiceData.external_id });
+      searchCriteria.push({ xendit_invoice_id: invoiceData.external_id });
+    }
+
+    const order = await Order.findOne({
+      where: { [Op.or]: searchCriteria },
+      include: [{ model: Event }],
+    });
+
+    if (!order) {
+      throw new Error(`Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`);
+    }
+
+    await order.update({
+      status: "expired",
+    });
+
+    if (order.Event) {
+      await order.Event.update({
+        available_tickets: order.Event.available_tickets + order.quantity,
+      });
+      console.log(`Returned ${order.quantity} tickets`);
+    }
+
+    console.log(`Order ${order.id} updated to expired`);
+
+    return {
+      success: true,
+      message: `Order ${order.id} updated to expired, tickets returned`,
+      updatedStatus: "expired",
+    };
+  } catch (error) {
+    console.error("Error processing invoice expired:", error.message);
+    return {
+      success: false,
+      message: `Error processing invoice expired: ${error.message}`,
+    };
+  }
+}
+
+async function handleInvoiceFailed(invoiceData, logId) {
+  try {
+    console.log("Processing invoice failed:", invoiceData);
+    if (!invoiceData || (!invoiceData.id && !invoiceData.external_id)) {
+      throw new Error("Invalid invoice data");
+    }
+
+    const searchCriteria = [];
+    if (invoiceData.id) searchCriteria.push({ xendit_invoice_id: invoiceData.id });
+    if (invoiceData.external_id) {
+      searchCriteria.push({ external_id: invoiceData.external_id });
+      searchCriteria.push({ xendit_invoice_id: invoiceData.external_id });
+    }
+
+    const order = await Order.findOne({
+      where: { [Op.or]: searchCriteria },
+      include: [{ model: Event }],
+    });
+
+    if (!order) {
+      throw new Error(`Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`);
+    }
+
+    await order.update({
+      status: "failed",
+    });
+
+    if (order.Event) {
+      await order.Event.update({
+        available_tickets: order.Event.available_tickets + order.quantity,
+      });
+      console.log(`Returned ${order.quantity} tickets`);
+    }
+
+    console.log(`Order ${order.id} updated to failed`);
+
+    return {
+      success: true,
+      message: `Order ${order.id} updated to failed, tickets returned`,
+      updatedStatus: "failed",
+    };
+  } catch (error) {
+    console.error("Error processing invoice failed:", error.message);
+    return {
+      success: false,
+      message: `Error processing invoice failed: ${error.message}`,
+    };
+  }
+}
+
+async function handlePaymentSucceeded(paymentData, logId) {
+  try {
+    console.log("Processing payment succeeded:", paymentData);
+    if (!paymentData || (!paymentData.id && !paymentData.external_id)) {
+      throw new Error("Invalid payment data");
+    }
+
+    const searchCriteria = [];
+    if (paymentData.external_id) {
+      searchCriteria.push({ external_id: paymentData.external_id });
+      searchCriteria.push({ xendit_invoice_id: paymentData.external_id });
+    }
+    if (paymentData.id) searchCriteria.push({ xendit_invoice_id: paymentData.id });
+
+    const order = await Order.findOne({
+      where: { [Op.or]: searchCriteria },
+    });
+
+    if (!order) {
+      console.log("Order not found");
+      return {
+        success: false,
+        message: "Order not found",
+      };
+    }
+
+    if (order.status === "pending") {
+      await order.update({
+        status: "paid",
+      });
+      console.log(`Order ${order.id} updated to paid`);
+      return {
+        success: true,
+        message: `Order ${order.id} updated to paid`,
+        updatedStatus: "paid",
+      };
+    }
+
+    return {
+      success: true,
+      message: `Order ${order.id} is already in state ${order.status}`,
+      updatedStatus: order.status,
+    };
+  } catch (error) {
+    console.error("Error processing payment succeeded:", error.message);
+    return {
+      success: false,
+      message: `Error processing payment succeeded: ${error.message}`,
+    };
+  }
+}
+
+async function handlePaymentFailed(paymentData, logId) {
+  try {
+    console.log("Processing payment failed:", paymentData);
+    if (!paymentData || (!paymentData.id && !paymentData.external_id)) {
+      throw new Error("Invalid payment data");
+    }
+
+    const searchCriteria = [];
+    if (paymentData.external_id) {
+      searchCriteria.push({ external_id: paymentData.external_id });
+      searchCriteria.push({ xendit_invoice_id: paymentData.external_id });
+    }
+    if (paymentData.id) searchCriteria.push({ xendit_invoice_id: paymentData.id });
+
+    const order = await Order.findOne({
+      where: { [Op.or]: searchCriteria },
+      include: [{ model: Event }],
+    });
+
+    if (!order) {
+      console.log("Order not found");
+      return {
+        success: false,
+        message: "Order not found",
+      };
+    }
+
+    await order.update({ status: "failed" });
+    if (order.Event) {
+      await order.Event.update({
+        available_tickets: order.Event.available_tickets + order.quantity,
+      });
+      console.log(`Returned ${order.quantity} tickets`);
+    }
+    return {
+      success: true,
+      message: `Order ${order.id} updated to failed`,
+      updatedStatus: "failed",
+    };
+  } catch (error) {
+    console.error("Error processing payment failed:", error.message);
+    return {
+      success: false,
+      message: `Error processing payment failed: ${error.message}`,
+    };
+  }
+}
+
 // END CONTROLLERS
 
 // Ensure database exists before Sequelize sync
@@ -1418,7 +1830,9 @@ async function syncDatabase() {
     ];
     for (const col of colsToAdd) {
       try {
-        await sequelize.query(`ALTER TABLE orders ADD COLUMN ${col.name} ${col.type};`);
+        await sequelize.query(
+          `ALTER TABLE orders ADD COLUMN ${col.name} ${col.type};`,
+        );
       } catch (colErr) {
         // Column already exists or table not created yet
       }
