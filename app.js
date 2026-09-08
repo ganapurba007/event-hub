@@ -32,12 +32,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // MIDDLEWARE
+app.set("trust proxy", 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "eventhub-default-secret",
     resave: false,
     saveUninitialized: false,
   }),
@@ -1889,6 +1890,18 @@ async function syncDatabase() {
     console.error("Error syncing database:", err);
   }
 }
+
+// 404 NOT FOUND FALLBACK ROUTE
+app.use((req, res) => {
+  res.status(404).render("home", {
+    user: req.session.user || null,
+    categories: [],
+    latestEvents: [],
+    cities: [],
+    message: null,
+    error: "404 - Page Not Found",
+  });
+});
 
 // Main server
 async function startServer() {
