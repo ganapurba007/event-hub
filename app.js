@@ -13,9 +13,16 @@ const app = express();
 const port = env.PORT;
 
 // Multer File Upload Configuration
-const uploadDir = path.join(__dirname, "public", "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const uploadDir = process.env.VERCEL
+  ? "/tmp"
+  : path.join(__dirname, "public", "uploads");
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn("Upload directory creation warning:", err.message);
 }
 
 const storage = multer.diskStorage({
