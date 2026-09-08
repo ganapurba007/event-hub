@@ -901,6 +901,8 @@ async function handleOrderCheckout(req, res) {
       `${req.protocol}://${req.get("host")}` ||
       `http://localhost:${currentPort}`;
 
+    const NGROK_URL = process.env.NGROK_URL;
+
     const invoiceData = {
       externalId: externalId,
       amount: parseFloat(total_amount),
@@ -912,8 +914,8 @@ async function handleOrderCheckout(req, res) {
         mobileNumber:
           attendee_phone || req.session.user.phone || "081234567890",
       },
-      successRedirectUrl: `${baseUrl}/orders/success?order_id=${externalId}`,
-      failureRedirectUrl: `${baseUrl}/orders/failed?order_id=${externalId}`,
+      successRedirectUrl: `${NGROK_URL}orders/success?order_id=${externalId}`,
+      failureRedirectUrl: `${NGROK_URL}orders/failed?order_id=${externalId}`,
       currency: "IDR",
       items: [
         {
@@ -1481,7 +1483,10 @@ app.post("/webhook/xendit", async (req, res) => {
       processing_error: processingResult.success
         ? null
         : processingResult.message,
-      status: processingResult.updatedStatus || webhookData.data?.status || webhookData.status,
+      status:
+        processingResult.updatedStatus ||
+        webhookData.data?.status ||
+        webhookData.status,
     });
 
     console.log(`Webhook processing completed : ${processingResult.message}`);
@@ -1517,7 +1522,8 @@ async function handleInvoicePaid(invoiceData, logId) {
     }
 
     const searchCriteria = [];
-    if (invoiceData.id) searchCriteria.push({ xendit_invoice_id: invoiceData.id });
+    if (invoiceData.id)
+      searchCriteria.push({ xendit_invoice_id: invoiceData.id });
     if (invoiceData.external_id) {
       searchCriteria.push({ external_id: invoiceData.external_id });
       searchCriteria.push({ xendit_invoice_id: invoiceData.external_id });
@@ -1528,7 +1534,9 @@ async function handleInvoicePaid(invoiceData, logId) {
     });
 
     if (!order) {
-      throw new Error(`Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`);
+      throw new Error(
+        `Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`,
+      );
     }
 
     await order.update({
@@ -1557,7 +1565,8 @@ async function handleInvoiceExpired(invoiceData, logId) {
     }
 
     const searchCriteria = [];
-    if (invoiceData.id) searchCriteria.push({ xendit_invoice_id: invoiceData.id });
+    if (invoiceData.id)
+      searchCriteria.push({ xendit_invoice_id: invoiceData.id });
     if (invoiceData.external_id) {
       searchCriteria.push({ external_id: invoiceData.external_id });
       searchCriteria.push({ xendit_invoice_id: invoiceData.external_id });
@@ -1569,7 +1578,9 @@ async function handleInvoiceExpired(invoiceData, logId) {
     });
 
     if (!order) {
-      throw new Error(`Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`);
+      throw new Error(
+        `Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`,
+      );
     }
 
     await order.update({
@@ -1607,7 +1618,8 @@ async function handleInvoiceFailed(invoiceData, logId) {
     }
 
     const searchCriteria = [];
-    if (invoiceData.id) searchCriteria.push({ xendit_invoice_id: invoiceData.id });
+    if (invoiceData.id)
+      searchCriteria.push({ xendit_invoice_id: invoiceData.id });
     if (invoiceData.external_id) {
       searchCriteria.push({ external_id: invoiceData.external_id });
       searchCriteria.push({ xendit_invoice_id: invoiceData.external_id });
@@ -1619,7 +1631,9 @@ async function handleInvoiceFailed(invoiceData, logId) {
     });
 
     if (!order) {
-      throw new Error(`Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`);
+      throw new Error(
+        `Order not found for invoice ID: ${invoiceData.id || invoiceData.external_id}`,
+      );
     }
 
     await order.update({
@@ -1661,7 +1675,8 @@ async function handlePaymentSucceeded(paymentData, logId) {
       searchCriteria.push({ external_id: paymentData.external_id });
       searchCriteria.push({ xendit_invoice_id: paymentData.external_id });
     }
-    if (paymentData.id) searchCriteria.push({ xendit_invoice_id: paymentData.id });
+    if (paymentData.id)
+      searchCriteria.push({ xendit_invoice_id: paymentData.id });
 
     const order = await Order.findOne({
       where: { [Op.or]: searchCriteria },
@@ -1713,7 +1728,8 @@ async function handlePaymentFailed(paymentData, logId) {
       searchCriteria.push({ external_id: paymentData.external_id });
       searchCriteria.push({ xendit_invoice_id: paymentData.external_id });
     }
-    if (paymentData.id) searchCriteria.push({ xendit_invoice_id: paymentData.id });
+    if (paymentData.id)
+      searchCriteria.push({ xendit_invoice_id: paymentData.id });
 
     const order = await Order.findOne({
       where: { [Op.or]: searchCriteria },

@@ -215,7 +215,7 @@
               </div>
 
               <!-- Organizer -->
-              <% const organizerName = (event.User && event.User.name) ? event.User.name.toUpperCase() : (event.User.name.toUpperCase() || null); %>
+              <% const organizerName = (event.User && event.User.name) ? event.User.name.toUpperCase() : null; %>
               <% if (organizerName) { %>
               <div class="flex items-center text-gray-500 gap-2 pt-1">
                 <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,6 +225,25 @@
                   Organized by <strong class="font-medium text-gray-700"><%= organizerName %></strong>
                 </span>
               </div>
+              <% } %>
+            </div>
+
+            <!-- Card Bottom Action & Available Tickets Badge -->
+            <div class="pt-3 flex items-center justify-between text-xs border-t border-gray-100">
+              <span class="text-primary font-extrabold group-hover:underline">Book Ticket Now →</span>
+              <% if (typeof event.available_tickets !== 'undefined' && event.available_tickets !== null) { %>
+                <% if (event.available_tickets > 0) { %>
+                  <span class="text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60 shadow-xs flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <%= event.available_tickets %> seats left
+                  </span>
+                <% } else { %>
+                  <span class="text-red-700 font-extrabold bg-red-50 px-2.5 py-1 rounded-full border border-red-200/60 shadow-xs">
+                    Sold Out
+                  </span>
+                <% } %>
+              <% } else { %>
+                <span class="text-gray-400 font-semibold">Available</span>
               <% } %>
             </div>
           </div>
