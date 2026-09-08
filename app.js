@@ -322,53 +322,51 @@ const requiredCreator = (req, res, next) => {
 };
 // END MIDDLEWARE
 
-// CONTROLLERS
 // INDEX
 app.get("/", async (req, res) => {
   try {
-    const categories = await Category.findAll();
-    let cities = [];
+    let categories = [];
+    let latestEvents = [];
+    let upcomingEvents = [];
+    let cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta", "Bali"];
+
     try {
+      categories = await Category.findAll();
       let citiesData = await Event.findAll({
         attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"]],
         where: { is_published: true },
         order: [["city", "ASC"]],
         raw: true,
       });
-      if (!citiesData || citiesData.length === 0) {
-        citiesData = await Event.findAll({
-          attributes: [
-            [Sequelize.fn("DISTINCT", Sequelize.col("city")), "city"],
-          ],
-          order: [["city", "ASC"]],
-          raw: true,
-        });
+      if (citiesData && citiesData.length > 0) {
+        const fetchedCities = citiesData
+          .map((c) => c.city || (c.dataValues && c.dataValues.city))
+          .filter(Boolean);
+        if (fetchedCities.length > 0) cities = fetchedCities;
       }
-      cities = citiesData
-        .map((c) => c.city || (c.dataValues && c.dataValues.city))
-        .filter(Boolean);
-    } catch (error) {
-      console.error("Error fetching cities:", error);
-      cities = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"];
+
+      latestEvents = await Event.findAll({
+        where: { is_published: true },
+        include: [Category, User],
+        order: [["created_at", "DESC"]],
+        limit: 6,
+      });
+      upcomingEvents = await Event.findAll({
+        where: { is_published: true, event_date: { [Op.gte]: new Date() } },
+        include: [Category, User],
+        order: [["event_date", "DESC"]],
+        limit: 6,
+      });
+    } catch (dbErr) {
+      console.error("Database Query Warning (Setup DB in Vercel env):", dbErr.message);
     }
-    const latestEvents = await Event.findAll({
-      where: { is_published: true },
-      include: [Category, User],
-      order: [["created_at", "DESC"]],
-      limit: 6,
-    });
-    const upcomingEvents = await Event.findAll({
-      where: { is_published: true, event_date: { [Op.gte]: new Date() } },
-      include: [Category, User],
-      order: [["event_date", "DESC"]],
-      limit: 6,
-    });
-    const message = req.session.message || req.query.message || null;
-    if (req.session.message) {
+
+    const message = (req.session && req.session.message) || req.query.message || null;
+    if (req.session && req.session.message) {
       delete req.session.message;
     }
     res.render("home", {
-      user: req.session.user,
+      user: req.session ? req.session.user : null,
       message,
       categories,
       cities,
@@ -376,8 +374,8 @@ app.get("/", async (req, res) => {
       upcomingEvents,
     });
   } catch (err) {
-    console.error("Error fetching events:", err);
-    res.status(500).send("Internal Server Error");
+    console.error("Error rendering home:", err);
+    res.status(500).send("Internal Server Error: " + err.message);
   }
 });
 // END INDEX
