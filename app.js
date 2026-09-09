@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const mysql2 = require("mysql2");
 const mysql = require("mysql2/promise");
 const { Sequelize, DataTypes, Op } = require("sequelize");
 const session = require("express-session");
@@ -75,6 +76,7 @@ const sequelize = new Sequelize(
     host: env.DB_HOST || "127.0.0.1",
     port: Number(env.DB_PORT || env.PORT) || 3306,
     dialect: "mysql",
+    dialectModule: mysql2,
     logging: false,
     dialectOptions:
       env.DB_HOST && env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost"
