@@ -66,7 +66,7 @@ app.use(
 
 // set view engine
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+app.set("views", [path.join(__dirname, "views"), path.join(__dirname, "partials")]);
 
 const sequelize = new Sequelize(
   env.DB_NAME || "event-management",
