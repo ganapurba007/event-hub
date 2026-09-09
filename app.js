@@ -962,8 +962,8 @@ async function handleOrderCheckout(req, res) {
       `${req.protocol}://${req.get("host")}` ||
       `http://localhost:${currentPort}`;
 
-    const NGROK_URL = process.env.NGROK_URL;
-    const DEPLOY_URL = process.env.DEPLOY_URL;
+    const rawBaseUrl = process.env.DEPLOY_URL || process.env.NGROK_URL || baseUrl;
+    const cleanBaseUrl = rawBaseUrl.replace(/\/+$/, "");
 
     const invoiceData = {
       externalId: externalId,
@@ -976,10 +976,8 @@ async function handleOrderCheckout(req, res) {
         mobileNumber:
           attendee_phone || req.session.user.phone || "081234567890",
       },
-      // successRedirectUrl: `${NGROK_URL}orders/success?order_id=${externalId}`,
-      // failureRedirectUrl: `${NGROK_URL}orders/failed?order_id=${externalId}`,
-      successRedirectUrl: `${DEPLOY_URL}orders/success?order_id=${externalId}`,
-      failureRedirectUrl: `${DEPLOY_URL}orders/failed?order_id=${externalId}`,
+      successRedirectUrl: `${cleanBaseUrl}/orders/success?order_id=${externalId}`,
+      failureRedirectUrl: `${cleanBaseUrl}/orders/failed?order_id=${externalId}`,
       currency: "IDR",
       items: [
         {
@@ -1011,7 +1009,7 @@ async function handleOrderCheckout(req, res) {
         xenditErr.message || xenditErr,
       );
       // Fallback redirect URL if Xendit API fails
-      paymentUrl = `${baseUrl}/orders/success?order_id=${externalId}`;
+      paymentUrl = `${cleanBaseUrl}/orders/success?order_id=${externalId}`;
     }
 
     // Create Order in DB
