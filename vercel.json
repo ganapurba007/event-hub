@@ -1,11 +1,7 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": [
-        "views/**",
-        "partials/**",
-        "public/**"
-      ]
+      "includeFiles": "{views/**,partials/**,public/**}"
     }
   },
   "rewrites": [
