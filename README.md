@@ -79,6 +79,7 @@ BASE_URL=http://localhost:3000
 # XENDIT PAYMENT GATEWAY
 XENDIT_SECRET_KEY=xnd_development_your_xendit_key_here
 NGROK_URL=http://localhost:3000/
+DEPLOY_URL=http://yourdomain.com/
 ```
 
 ---

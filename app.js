@@ -81,11 +81,11 @@ const sequelize = new Sequelize(
     dialectOptions:
       env.DB_HOST && env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost"
         ? {
-            ssl: {
-              require: true,
-              rejectUnauthorized: false,
-            },
-          }
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        }
         : {},
   },
 );
@@ -371,7 +371,7 @@ async function ensureDbSynced() {
           { name: "Exhibition", icon: "bi bi-palette" },
           { name: "Community", icon: "bi bi-people" },
           { name: "Others", icon: "bi bi-grid" },
-        ]).catch(() => {});
+        ]).catch(() => { });
       }
     } catch (err) {
       console.error("Auto DB Sync Warning:", err.message);
@@ -963,6 +963,7 @@ async function handleOrderCheckout(req, res) {
       `http://localhost:${currentPort}`;
 
     const NGROK_URL = process.env.NGROK_URL;
+    const DEPLOY_URL = process.env.DEPLOY_URL;
 
     const invoiceData = {
       externalId: externalId,
@@ -975,8 +976,10 @@ async function handleOrderCheckout(req, res) {
         mobileNumber:
           attendee_phone || req.session.user.phone || "081234567890",
       },
-      successRedirectUrl: `${NGROK_URL}orders/success?order_id=${externalId}`,
-      failureRedirectUrl: `${NGROK_URL}orders/failed?order_id=${externalId}`,
+      // successRedirectUrl: `${NGROK_URL}orders/success?order_id=${externalId}`,
+      // failureRedirectUrl: `${NGROK_URL}orders/failed?order_id=${externalId}`,
+      successRedirectUrl: `${DEPLOY_URL}orders/success?order_id=${externalId}`,
+      failureRedirectUrl: `${DEPLOY_URL}orders/failed?order_id=${externalId}`,
       currency: "IDR",
       items: [
         {
