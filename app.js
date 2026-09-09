@@ -351,6 +351,37 @@ const requiredCreator = (req, res, next) => {
 };
 // END MIDDLEWARE
 
+// AUTO DB SYNC MIDDLEWARE FOR SERVERLESS (Aiven Cloud MySQL)
+let dbSynced = false;
+async function ensureDbSynced() {
+  if (!dbSynced && process.env.DB_HOST && process.env.DB_HOST !== "127.0.0.1") {
+    try {
+      await sequelize.sync();
+      dbSynced = true;
+      console.log("Database tables synced successfully!");
+
+      const count = await Category.count().catch(() => 0);
+      if (count === 0) {
+        await Category.bulkCreate([
+          { name: "Music", icon: "bi bi-music-note-beamed" },
+          { name: "Technology", icon: "bi bi-cpu" },
+          { name: "Sports", icon: "bi bi-trophy" },
+          { name: "Exhibition", icon: "bi bi-palette" },
+          { name: "Community", icon: "bi bi-people" },
+          { name: "Others", icon: "bi bi-grid" },
+        ]).catch(() => {});
+      }
+    } catch (err) {
+      console.error("Auto DB Sync Warning:", err.message);
+    }
+  }
+}
+
+app.use(async (req, res, next) => {
+  await ensureDbSynced();
+  next();
+});
+
 // INDEX
 app.get("/", async (req, res) => {
   try {
